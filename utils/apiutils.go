@@ -59,7 +59,6 @@ func MakeRequest(url string, ch chan string) {
 	}
 	data := make([]byte, 128)
 	defer res.Body.Close()
-	defer close(ch)
 
 	for n, err := res.Body.Read(data); err == nil; n, err = res.Body.Read(data) {
 		ch <- string(data[:n])

@@ -28,8 +28,9 @@ func NewActor(actorNum int, chanToRecv chan string) *Actor {
 }
 
 func (actor *Actor) actorLoop(actionChan chan string) {
+	defer close(actionChan)
 	for {
 		action := <-actionChan
-		log.Println(action)
+		log.Println("PRINT MY ACTION:", action)
 	}
 }
