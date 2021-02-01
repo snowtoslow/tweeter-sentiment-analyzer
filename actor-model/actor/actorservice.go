@@ -5,18 +5,19 @@ import (
 	"strconv"
 )
 
-/*func CreateActorPool(numberOfActors int)(actorPoll []*Actor){
+func CreateActorPool(numberOfActors int) (actorPoll []*Actor) {
 	for i := 0; i < numberOfActors; i++ {
 		actorPoll = append(actorPoll, NewActor(i))
 	}
 	return actorPoll
-}*/
-
-func (actor *Actor) SendMessage() (err error) {
-	return err
 }
 
-func NewActor(actorNum int, chanToRecv chan string) *Actor {
+func (actor *Actor) SendMessage(data string) {
+	actor.ActionChan <- data
+}
+
+func NewActor(actorNum int) *Actor {
+	chanToRecv := make(chan string, 10)
 	actor := &Actor{
 		Address:    "actor_" + strconv.Itoa(actorNum),
 		Identity:   "ident_" + strconv.Itoa(actorNum),
@@ -27,10 +28,10 @@ func NewActor(actorNum int, chanToRecv chan string) *Actor {
 	return actor
 }
 
-func (actor *Actor) actorLoop(actionChan chan string) {
-	defer close(actionChan)
+func (actor *Actor) actorLoop(actionChan <-chan string) {
+	defer close(actor.ActionChan)
 	for {
 		action := <-actionChan
-		log.Println("PRINT MY ACTION:", action)
+		log.Println(action)
 	}
 }

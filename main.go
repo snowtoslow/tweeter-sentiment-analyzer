@@ -22,7 +22,7 @@ func main() {
 
 	runtime.GOMAXPROCS(7)
 
-	ch1 := make(chan string, 128)
+	ch1 := make(chan string, 10)
 
 	utils.MakeRequest("http://localhost:4000/tweets/1", ch1)
 

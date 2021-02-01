@@ -1,3 +1,5 @@
 .idea
 .bin
 vendor
+test.go
+back-up.txt

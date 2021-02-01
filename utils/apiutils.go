@@ -2,7 +2,6 @@ package utils
 
 import (
 	"encoding/json"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -31,37 +30,17 @@ func GetRoutes(address string) (mainRoutes *models.MainRouteMsg, err error) {
 	return mainRoutes, nil
 }
 
-func GetStreams(address string, ch chan string) (err error) {
-	res, err := http.Get(address)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer res.Body.Close()
-
-	p := make([]byte, 4)
-	for {
-		_, err := res.Body.Read(p)
-		if err == io.EOF {
-			break
-		}
-	}
-
-	log.Fatal(string(p))
-
-	return nil
-}
-
 func MakeRequest(url string, ch chan string) {
 	res, err := http.Get(url)
 	if err != nil {
 		close(ch)
 		return
 	}
-	data := make([]byte, 128)
+	data := make([]byte, 512)
 	defer res.Body.Close()
 
 	for n, err := res.Body.Read(data); err == nil; n, err = res.Body.Read(data) {
-		ch <- string(data[:n])
-		actor.NewActor(1, ch)
+		myActor := actor.NewActor(1)
+		myActor.SendMessage(string(data[:n]))
 	}
 }
