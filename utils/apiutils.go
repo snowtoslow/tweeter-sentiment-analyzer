@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"tweeter-sentiment-analyzer/actor-model/actor"
 	"tweeter-sentiment-analyzer/models"
 )
 
@@ -50,7 +51,7 @@ func GetStreams(address string, ch chan string) (err error) {
 	return nil
 }
 
-func MakeRequest(url string, ch chan<- string) {
+func MakeRequest(url string, ch chan string) {
 	res, err := http.Get(url)
 	if err != nil {
 		close(ch)
@@ -62,5 +63,6 @@ func MakeRequest(url string, ch chan<- string) {
 
 	for n, err := res.Body.Read(data); err == nil; n, err = res.Body.Read(data) {
 		ch <- string(data[:n])
+		actor.NewActor(1, ch)
 	}
 }

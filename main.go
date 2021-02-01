@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"runtime"
 	"tweeter-sentiment-analyzer/utils"
@@ -25,11 +24,6 @@ func main() {
 
 	ch1 := make(chan string, 128)
 
-	go utils.MakeRequest("http://localhost:4000/tweets/1", ch1)
+	utils.MakeRequest("http://localhost:4000/tweets/1", ch1)
 
-	for v := range ch1 {
-		if cap(ch1) == 128 {
-			fmt.Println("CHUNKS:", v)
-		}
-	}
 }
