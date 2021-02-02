@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"tweeter-sentiment-analyzer/actor-model/actor"
+	"tweeter-sentiment-analyzer/actor-model/routeractor"
 	"tweeter-sentiment-analyzer/models"
 )
 
@@ -35,13 +36,11 @@ func MakeRequest(url string, actors []*actor.Actor) {
 	if err != nil {
 		return
 	}
-	data := make([]byte, 512)
+	data := make([]byte, 64*1024)
 	defer res.Body.Close()
-	routerActor := actor.NewActor("router") // here is created router actor which is also a siple actor but which can route messages to actors from pool!
+	routerActor := routeractor.NewRouterActor("router") // here is created router actor which is also a siple actor but which can route messages to actors from pool!
 	for n, err := res.Body.Read(data); err == nil; n, err = res.Body.Read(data) {
-		routerActor.SendMessage(string(data[:n]), actors) //here messages are send;
-
-		/*myActor := actor.NewActor("working")
-		myActor.SendMessage(string(data[:n]))*/
+		randomActor := actor.GetRandomActor(actors)
+		routerActor.SendMessage(string(data[:n]), randomActor) //here messages are send;
 	}
 }

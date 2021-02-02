@@ -9,17 +9,13 @@ import (
 
 func main() {
 	log.Println("entry point!")
-	/*
-		_, err := utils.GetRoutes("http://localhost:4000")
-		if err!=nil {
-			log.Println("ERR OCCURED:",err)
-		}*/
+
+	_, err := utils.GetRoutes("http://localhost:4000")
+	if err != nil {
+		log.Println("ERR OCCURED:", err)
+	}
 
 	//director := supervisor.NewSupervisor()
-
-	/*for _, v := range routesStruct.Routes{
-
-	}*/
 
 	actorPool := actor.CreateActorPool(5) // actor pool created here!
 
