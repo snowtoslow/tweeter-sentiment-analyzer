@@ -2,6 +2,7 @@ package actor
 
 import (
 	"log"
+	"math/rand"
 	"strconv"
 )
 
@@ -12,14 +13,22 @@ func CreateActorPool(numberOfActors int) (actorPoll []*Actor) {
 	return actorPoll
 }
 
-func (actor *Actor) SendMessage(data string) {
-	actor.ActionChan <- data
+//generate random actors from my array
+func GetRandomActor(actorPoll []*Actor) *Actor {
+	randomIndex := rand.Intn(len(actorPoll))
+	log.Println("Actor index:", randomIndex)
+	return actorPoll[randomIndex]
 }
 
-/*func (actor *Actor) SendMessage(data string,actorToRecvMsg *Actor) {
-	log.Printf("id:%s---->%s",actorToRecvMsg.Identity,data)
-	actorToRecvMsg.ActionChan <- data
+/*func (actor *Actor) SendMessage(data string) {
+	actor.ActionChan <- data
 }*/
+
+func (actor *Actor) SendMessage(data string, actors []*Actor) {
+	randomActor := GetRandomActor(actors) //pick a random actor from my pool of actors;
+	randomActor.ActionChan <- data        // send msg to this random actor from router actor;
+	log.Printf("id:%s---->%s", randomActor.Identity, data)
+}
 
 func NewActor(actorName string) *Actor {
 	chanToRecv := make(chan string, 10)

@@ -21,7 +21,7 @@ func main() {
 
 	}*/
 
-	actorPool := actor.CreateActorPool(5)
+	actorPool := actor.CreateActorPool(5) // actor pool created here!
 
 	runtime.GOMAXPROCS(7)
 

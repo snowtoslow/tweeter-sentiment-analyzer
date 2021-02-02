@@ -37,12 +37,11 @@ func MakeRequest(url string, actors []*actor.Actor) {
 	}
 	data := make([]byte, 512)
 	defer res.Body.Close()
-	// routerActor := actor.NewActor("router")
+	routerActor := actor.NewActor("router") // here is created router actor which is also a siple actor but which can route messages to actors from pool!
 	for n, err := res.Body.Read(data); err == nil; n, err = res.Body.Read(data) {
-		/*for _,v := range actors{
-			routerActor.SendMessage(string(data[:n]))
-		}*/
-		myActor := actor.NewActor("working")
-		myActor.SendMessage(string(data[:n]))
+		routerActor.SendMessage(string(data[:n]), actors) //here messages are send;
+
+		/*myActor := actor.NewActor("working")
+		myActor.SendMessage(string(data[:n]))*/
 	}
 }
