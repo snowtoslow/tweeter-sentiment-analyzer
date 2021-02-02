@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"runtime"
+	"tweeter-sentiment-analyzer/actor-model/actor"
 	"tweeter-sentiment-analyzer/utils"
 )
 
@@ -20,10 +21,10 @@ func main() {
 
 	}*/
 
+	actorPool := actor.CreateActorPool(5)
+
 	runtime.GOMAXPROCS(7)
 
-	ch1 := make(chan string, 10)
-
-	utils.MakeRequest("http://localhost:4000/tweets/1", ch1)
+	utils.MakeRequest("http://localhost:4000/tweets/1", actorPool)
 
 }

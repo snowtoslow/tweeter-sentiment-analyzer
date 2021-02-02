@@ -30,17 +30,19 @@ func GetRoutes(address string) (mainRoutes *models.MainRouteMsg, err error) {
 	return mainRoutes, nil
 }
 
-func MakeRequest(url string, ch chan string) {
+func MakeRequest(url string, actors []*actor.Actor) {
 	res, err := http.Get(url)
 	if err != nil {
-		close(ch)
 		return
 	}
 	data := make([]byte, 512)
 	defer res.Body.Close()
-
+	// routerActor := actor.NewActor("router")
 	for n, err := res.Body.Read(data); err == nil; n, err = res.Body.Read(data) {
-		myActor := actor.NewActor(1)
+		/*for _,v := range actors{
+			routerActor.SendMessage(string(data[:n]))
+		}*/
+		myActor := actor.NewActor("working")
 		myActor.SendMessage(string(data[:n]))
 	}
 }

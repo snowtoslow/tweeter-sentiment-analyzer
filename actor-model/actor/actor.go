@@ -3,7 +3,8 @@ package actor
 type Action func()
 
 type Actor struct {
-	Address    string
+	// Address    string
+	IsBusy     bool
 	Identity   string
 	ActionChan chan<- string
 }
