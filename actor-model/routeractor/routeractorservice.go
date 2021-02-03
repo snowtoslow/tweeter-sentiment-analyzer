@@ -18,6 +18,6 @@ func NewRouterActor(actorName string) *RouterActor {
 func (routerActor *RouterActor) SendMessage(data string, randomActor *actor.Actor) {
 	routerActor.ChanToRecvMsg <- data
 	action := <-routerActor.ChanToRecvMsg
-	randomActor.ActionChan <- action
+	randomActor.ChanToReceiveData <- action
 	log.Printf("DATA WAS SENT FROM MAIN ROUTER ACTOR:%s to WORKER_ACTOR: %s", routerActor.Identity, randomActor.Identity)
 }

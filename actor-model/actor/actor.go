@@ -3,6 +3,6 @@ package actor
 type Action func()
 
 type Actor struct {
-	Identity   string
-	ActionChan chan string
+	Identity          string
+	ChanToReceiveData chan string
 }

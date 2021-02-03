@@ -10,7 +10,7 @@ import (
 func main() {
 	log.Println("entry point!")
 
-	_, err := utils.GetRoutes("http://localhost:4000")
+	mainRouterStruct, err := utils.GetRoutes("http://localhost:4000")
 	if err != nil {
 		log.Println("ERR OCCURED:", err)
 	}
@@ -21,6 +21,14 @@ func main() {
 
 	runtime.GOMAXPROCS(7)
 
-	utils.MakeRequest("http://localhost:4000/tweets/1", actorPool)
+	chToRecvData := make(chan chan string, 10)
+
+	for _, v := range mainRouterStruct.Routes[:2] {
+		go utils.MakeRequest("http://localhost:4000"+v, actorPool, chToRecvData)
+	}
+
+	for range chToRecvData {
+		_ = <-chToRecvData
+	}
 
 }
