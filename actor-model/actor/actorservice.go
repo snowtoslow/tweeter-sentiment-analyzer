@@ -1,9 +1,9 @@
 package actor
 
 import (
+	"fmt"
 	"log"
 	"math/rand"
-	"regexp"
 	"strconv"
 )
 
@@ -20,14 +20,14 @@ func GetRandomActor(actorPoll []*Actor) *Actor {
 	return actorPoll[randomIndex]
 }
 
-/*func (actor *Actor) SendMessage(data string, actors []*Actor) {
+/*func (actor *Actor) SendProcessedMessage(data string, actors []*Actor) {
 	randomActor := GetRandomActor(actors) //pick a random actor from my pool of actors;
 	randomActor.ChanToReceiveData <- data        // send msg to this random actor from router actor;
 	log.Printf("id:%s---->%s", randomActor.Identity, data)
 }*/
 
 func NewActor(actorName string) *Actor {
-	chanToRecv := make(chan string, 10)
+	chanToRecv := make(chan interface{}, 10)
 	actor := &Actor{
 		Identity:          actorName + "_actor",
 		ChanToReceiveData: chanToRecv,
@@ -37,12 +37,15 @@ func NewActor(actorName string) *Actor {
 	return actor
 }
 
-func (actor *Actor) actorLoop(actionChan <-chan string) {
+func (actor *Actor) actorLoop(actionChan <-chan interface{}) {
 	defer close(actor.ChanToReceiveData)
-	/// regexData := regexp.MustCompile("data: {(.*?)}")// already tested
-	messageRegex := regexp.MustCompile("event:(.*)") // need to test
 	for {
 		action := <-actor.ChanToReceiveData
-		log.Println("HERE:", messageRegex.FindString(action))
+		if fmt.Sprintf("%T", action) == "*models.MyJsonName" {
+			log.Println("Stuff to count:")
+		} else if fmt.Sprintf("%T", action) == "message_types.PanicMessage" {
+			log.Println("ERROR:")
+		}
+		//log.Println("HERE:", action)
 	}
 }

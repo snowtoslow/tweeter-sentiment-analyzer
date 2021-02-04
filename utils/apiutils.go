@@ -43,6 +43,6 @@ func MakeRequest(url string, actors []*actor.Actor, ch chan chan string) {
 	routerActor := routeractor.NewRouterActor("router") // here is created router actor which is also a siple actor but which can route messages to actors from pool!
 	for n, err := res.Body.Read(data); err == nil; n, err = res.Body.Read(data) {
 		randomActor := actor.GetRandomActor(actors)
-		routerActor.SendMessage(string(data[:n]), randomActor) //here messages are send;
+		routerActor.SendProcessedMessage(string(data[:n]), randomActor) //here messages are send;
 	}
 }
