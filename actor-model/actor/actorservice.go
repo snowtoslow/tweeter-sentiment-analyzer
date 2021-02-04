@@ -22,9 +22,9 @@ func CreateActorPoll(numberOfActors int) (actorPoll []*Actor, err error) {
 }
 
 func NewActor(actorName string) *Actor {
-	chanToRecv := make(chan string, 10)
+	chanToRecv := make(chan string, constants.GlobalChanSiz)
 	actor := &Actor{
-		Identity:          actorName + "_actor",
+		Identity:          actorName + constants.ActorName,
 		ChanToReceiveData: chanToRecv,
 	}
 
@@ -36,16 +36,20 @@ func (actor *Actor) actorLoop() {
 	defer close(actor.ChanToReceiveData)
 	for {
 		action := actor.processReceivedMessage(<-actor.ChanToReceiveData)
-		if fmt.Sprintf("%T", action) == "*models.MyJsonName" {
+		if fmt.Sprintf("%T", action) == constants.JsonNameOfStruct {
 			log.Println("Stuff to count:")
-		} else if fmt.Sprintf("%T", action) == "message_types.PanicMessage" {
+		} else if fmt.Sprintf("%T", action) == constants.PanicMessageType {
 			log.Println("ERROR:")
 		}
 	}
 }
 
+func (actor *Actor) SendMessage(data string) {
+	actor.ChanToReceiveData <- data
+}
+
 func (actor *Actor) processReceivedMessage(dataToRecv string) interface{} {
-	regexData := regexp.MustCompile("\\{.*\\:\\{.*\\:.*\\}\\}|\\{(.*?)\\}") // already tested
+	regexData := regexp.MustCompile(constants.JsonRegex)
 	receivedString := regexData.FindString(dataToRecv)
 	var tweetMsg *models.MyJsonName
 	if receivedString == constants.PanicMessage {
