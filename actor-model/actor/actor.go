@@ -4,5 +4,5 @@ type Action func()
 
 type Actor struct {
 	Identity          string
-	ChanToReceiveData chan interface{}
+	ChanToReceiveData chan string
 }

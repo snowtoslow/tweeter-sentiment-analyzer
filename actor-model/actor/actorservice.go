@@ -1,51 +1,60 @@
 package actor
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
-	"math/rand"
+	"regexp"
 	"strconv"
+	msgType "tweeter-sentiment-analyzer/actor-model/message-types"
+	"tweeter-sentiment-analyzer/constants"
+	"tweeter-sentiment-analyzer/models"
 )
 
-func CreateActorPool(numberOfActors int) (actorPoll []*Actor) {
+func CreateActorPoll(numberOfActors int) (actorPoll []*Actor, err error) {
+	if numberOfActors <= 1 {
+		return nil, fmt.Errorf("number of actors could not be smaller or equal with one!")
+	}
 	for i := 0; i < numberOfActors; i++ {
 		actorPoll = append(actorPoll, NewActor("working_"+strconv.Itoa(i)))
 	}
-	return actorPoll
+	return
 }
-
-//generate random actors from my array
-func GetRandomActor(actorPoll []*Actor) *Actor {
-	randomIndex := rand.Intn(len(actorPoll))
-	return actorPoll[randomIndex]
-}
-
-/*func (actor *Actor) SendProcessedMessage(data string, actors []*Actor) {
-	randomActor := GetRandomActor(actors) //pick a random actor from my pool of actors;
-	randomActor.ChanToReceiveData <- data        // send msg to this random actor from router actor;
-	log.Printf("id:%s---->%s", randomActor.Identity, data)
-}*/
 
 func NewActor(actorName string) *Actor {
-	chanToRecv := make(chan interface{}, 10)
+	chanToRecv := make(chan string, 10)
 	actor := &Actor{
 		Identity:          actorName + "_actor",
 		ChanToReceiveData: chanToRecv,
 	}
 
-	go actor.actorLoop(chanToRecv)
+	go actor.actorLoop()
 	return actor
 }
 
-func (actor *Actor) actorLoop(actionChan <-chan interface{}) {
+func (actor *Actor) actorLoop() {
 	defer close(actor.ChanToReceiveData)
 	for {
-		action := <-actor.ChanToReceiveData
+		action := actor.processReceivedMessage(<-actor.ChanToReceiveData)
 		if fmt.Sprintf("%T", action) == "*models.MyJsonName" {
 			log.Println("Stuff to count:")
 		} else if fmt.Sprintf("%T", action) == "message_types.PanicMessage" {
 			log.Println("ERROR:")
 		}
-		//log.Println("HERE:", action)
+	}
+}
+
+func (actor *Actor) processReceivedMessage(dataToRecv string) interface{} {
+	regexData := regexp.MustCompile("\\{.*\\:\\{.*\\:.*\\}\\}|\\{(.*?)\\}") // already tested
+	receivedString := regexData.FindString(dataToRecv)
+	var tweetMsg *models.MyJsonName
+	if receivedString == constants.PanicMessage {
+		return msgType.PanicMessage(receivedString)
+	} else {
+		err := json.Unmarshal([]byte(receivedString), &tweetMsg)
+		if err != nil {
+			return err
+		}
+		return tweetMsg
 	}
 }

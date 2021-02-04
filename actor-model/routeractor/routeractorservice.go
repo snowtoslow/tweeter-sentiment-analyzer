@@ -1,46 +1,41 @@
 package routeractor
 
 import (
-	"encoding/json"
-	"log"
-	"regexp"
 	"tweeter-sentiment-analyzer/actor-model/actor"
-	msgType "tweeter-sentiment-analyzer/actor-model/message-types"
-	"tweeter-sentiment-analyzer/constants"
-	"tweeter-sentiment-analyzer/models"
 )
 
-func NewRouterActor(actorName string) *RouterActor {
+func NewRouterActor(actorName string, actorAmount int) (*RouterActor, error) {
 	chanToRecvMsg := make(chan string, 10)
+	actorPool, err := actor.CreateActorPoll(actorAmount) // actor pool created here!
+	if err != nil {
+		return nil, err
+	}
 	routerActor := &RouterActor{
-		Identity:      actorName + "_actor",
-		ChanToRecvMsg: chanToRecvMsg,
+		Identity:          actorName + "_actor",
+		ChanToRecvMsg:     chanToRecvMsg,
+		CurrentActorIndex: 0,
+		Actors:            actorPool,
 	}
 
-	return routerActor
+	go routerActor.actorLoop() //actor loop for balancing;
+
+	return routerActor, nil
 }
 
-func (routerActor *RouterActor) SendProcessedMessage(data string, randomActor *actor.Actor) {
-	/*routerActor.ChanToRecvMsg <- data
-	action := <-routerActor.ChanToRecvMsg*/
-	randomActor.ChanToReceiveData <- routerActor.getAndProcessMsg(data)
-	log.Printf("DATA WAS SENT FROM MAIN ROUTER ACTOR:%s to WORKER_ACTOR: %s", routerActor.Identity, randomActor.Identity)
-}
-
-func (routerActor *RouterActor) getAndProcessMsg(data string) interface{} {
-	regexData := regexp.MustCompile("\\{.*\\:\\{.*\\:.*\\}\\}|\\{(.*?)\\}") // already tested
+func (routerActor *RouterActor) SendMessage(data string) {
 	routerActor.ChanToRecvMsg <- data
-	receivedString := regexData.FindString(<-routerActor.ChanToRecvMsg)
-	var tweetMsg *models.MyJsonName
-	if receivedString == constants.PanicMessage {
-		return msgType.PanicMessage(receivedString)
-	} else {
-		err := json.Unmarshal([]byte(receivedString), &tweetMsg)
-		if err != nil {
-			return err
+}
+
+func (routerActor *RouterActor) actorLoop() {
+	defer close(routerActor.ChanToRecvMsg)
+	for {
+		select {
+		case output := <-routerActor.ChanToRecvMsg:
+			if routerActor.CurrentActorIndex >= len(routerActor.Actors) {
+				routerActor.CurrentActorIndex = 0
+			}
+			routerActor.Actors[routerActor.CurrentActorIndex].ChanToReceiveData <- output
+			routerActor.CurrentActorIndex++
 		}
-		return tweetMsg
 	}
-	//return receivedString
-	//return regexJson.FindString(regexData.FindString(<-routerActor.ChanToRecvMsg))
 }
