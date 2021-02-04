@@ -22,7 +22,7 @@ func CreateActorPoll(numberOfActors int) (actorPoll []*Actor, err error) {
 }
 
 func NewActor(actorName string) *Actor {
-	chanToRecv := make(chan string, constants.GlobalChanSiz)
+	chanToRecv := make(chan string, constants.GlobalChanSize)
 	actor := &Actor{
 		Identity:          actorName + constants.ActorName,
 		ChanToReceiveData: chanToRecv,

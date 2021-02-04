@@ -6,7 +6,7 @@ import (
 )
 
 func NewRouterActor(actorName string, actorAmount int) (*RouterActor, error) {
-	chanToRecvMsg := make(chan string, constants.GlobalChanSiz)
+	chanToRecvMsg := make(chan string, constants.GlobalChanSize)
 	actorPool, err := actor.CreateActorPoll(actorAmount) // actor pool created here!
 	if err != nil {
 		return nil, err

@@ -7,5 +7,5 @@ var (
 	JsonNameOfStruct  = "*models.MyJsonName"
 	PanicMessageType  = "message_types.PanicMessage"
 	ActorName         = "_actor"
-	GlobalChanSiz     = 10
+	GlobalChanSize    = 10
 )

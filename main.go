@@ -19,7 +19,7 @@ func main() {
 	cpuNumber := runtime.NumCPU()
 	runtime.GOMAXPROCS(cpuNumber)
 
-	chToRecvData := make(chan string, constants.GlobalChanSiz)
+	chToRecvData := make(chan string, constants.GlobalChanSize)
 
 	for _, v := range mainRouterStruct.Routes[:2] {
 		go utils.MakeRequest(constants.EndPointToTrigger+v, chToRecvData)
