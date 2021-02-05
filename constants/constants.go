@@ -5,7 +5,7 @@ var (
 	JsonRegex         = "\\{.*\\:\\{.*\\:.*\\}\\}|\\{(.*?)\\}"
 	EndPointToTrigger = "http://localhost:4000"
 	JsonNameOfStruct  = "*models.MyJsonName"
-	PanicMessageType  = "message_types.PanicMessage"
+	PanicMessageType  = "messagetypes.PanicMessage"
 	ActorName         = "_actor"
 	GlobalChanSize    = 10
 )

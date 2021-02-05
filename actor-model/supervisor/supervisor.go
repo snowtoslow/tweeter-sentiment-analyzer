@@ -1,11 +1,11 @@
 package supervisor
 
-type Supervisor struct {
-	ActorAddresses *[]string
-}
+import (
+	"tweeter-sentiment-analyzer/actor-model/actor"
+	message_types "tweeter-sentiment-analyzer/actor-model/messagetypes"
+)
 
-func NewSupervisor() *Supervisor {
-	return &Supervisor{
-		ActorAddresses: new([]string),
-	}
+type Supervisor struct {
+	Actors                    []*actor.Actor
+	ChanToReceiveErrorMessage chan message_types.ErrorForSupervisor
 }
