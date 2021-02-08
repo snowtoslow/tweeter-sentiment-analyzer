@@ -41,9 +41,9 @@ func (actor *Actor) actorLoop() {
 	for {
 		action := actor.processReceivedMessage(<-actor.ChanToReceiveData)
 		if fmt.Sprintf("%T", action) == constants.JsonNameOfStruct {
-			log.Println("Stuff to count:")
+			// log.Println("Stuff to count:")
 		} else if fmt.Sprintf("%T", action) == constants.PanicMessageType {
-			log.Println("ERROR:", action)
+			log.Println("ERROR:")
 			errMessageForSupervisor := &msgType.ErrorForSupervisor{
 				FailedActorIdentity: actor.Identity,
 				PanicFunction: func() {

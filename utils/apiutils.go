@@ -1,12 +1,10 @@
 package utils
 
 import (
-	"bufio"
 	"encoding/json"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"tweeter-sentiment-analyzer/actor-model/routeractor"
 	"tweeter-sentiment-analyzer/models"
 )
 
@@ -31,7 +29,8 @@ func GetRoutes(address string) (mainRoutes *models.MainRouteMsg, err error) {
 	return
 }
 
-func MakeRequest(url string, ch chan string) {
+// could delete it in near future!
+/*func MakeRequest(url string, ch chan string) {
 	res, err := http.Get(url)
 	if err != nil {
 		close(ch)
@@ -50,4 +49,4 @@ func MakeRequest(url string, ch chan string) {
 	for scanner.Scan() {
 		routerActor.SendMessage(scanner.Text())
 	}
-}
+}*/

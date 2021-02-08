@@ -2,7 +2,6 @@ package supervisor
 
 import (
 	"fmt"
-	"log"
 	"tweeter-sentiment-analyzer/actor-model/actor"
 	"tweeter-sentiment-analyzer/actor-model/messagetypes"
 	"tweeter-sentiment-analyzer/constants"
@@ -26,7 +25,11 @@ func (supervisor *Supervisor) SendMessage(errMsg messagetypes.ErrorForSupervisor
 }
 
 func (supervisor *Supervisor) actorLoop() {
-	log.Println("actor loop!")
+	defer close(supervisor.ChanToReceiveErrorMessage)
+	for {
+		action := <-supervisor.ChanToReceiveErrorMessage
+		action.PanicFunction()
+	}
 }
 
 func (supervisor *Supervisor) deleteActorByActorName() (actors []*actor.Actor, err error) {

@@ -1,6 +1,8 @@
 package routeractor
 
 import (
+	"bufio"
+	"net/http"
 	"tweeter-sentiment-analyzer/actor-model/actor"
 	"tweeter-sentiment-analyzer/constants"
 )
@@ -23,7 +25,21 @@ func NewRouterActor(actorName string, actorAmount int) (*RouterActor, error) {
 	return routerActor, nil
 }
 
-func (routerActor *RouterActor) SendMessage(data string) {
+func (routerActor *RouterActor) MakeRequest(url string, ch chan string) {
+	res, err := http.Get(url)
+	if err != nil {
+		close(ch)
+		return
+	}
+	defer res.Body.Close()
+	defer close(ch)
+	scanner := bufio.NewScanner(res.Body)
+	for scanner.Scan() {
+		routerActor.sendMessage(scanner.Text())
+	}
+}
+
+func (routerActor *RouterActor) sendMessage(data string) {
 	routerActor.ChanToRecvMsg <- data
 }
 
