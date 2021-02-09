@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"runtime"
+	actor_model "tweeter-sentiment-analyzer/actor-model"
 	"tweeter-sentiment-analyzer/constants"
 	"tweeter-sentiment-analyzer/utils"
 )
@@ -15,18 +16,8 @@ func main() {
 		log.Println("ERR OCCURED:", err)
 	}
 
-	//director := supervisor.NewSupervisor()
 	cpuNumber := runtime.NumCPU()
 	runtime.GOMAXPROCS(cpuNumber)
-
-	chToRecvData := make(chan string, constants.GlobalChanSize)
-
-	for _, v := range mainRouterStruct.Routes[:2] {
-		go utils.MakeRequest(constants.EndPointToTrigger+v, chToRecvData)
-	}
-
-	for range mainRouterStruct.Routes[:2] {
-		_ = <-chToRecvData
-	}
+	actor_model.RunApp(mainRouterStruct.Routes[:2])
 
 }
