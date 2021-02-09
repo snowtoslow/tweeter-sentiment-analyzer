@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strconv"
 	msgType "tweeter-sentiment-analyzer/actor-model/messagetypes"
+	"tweeter-sentiment-analyzer/actor-model/supervisor"
 	"tweeter-sentiment-analyzer/constants"
 	"tweeter-sentiment-analyzer/models"
 )
@@ -37,21 +38,23 @@ func (actor *Actor) SendMessage(data string) {
 }
 
 func (actor *Actor) actorLoop() {
+	newSupervisor := supervisor.NewSupervisor("supervisor")
 	defer close(actor.ChanToReceiveData)
 	for {
 		action := actor.processReceivedMessage(<-actor.ChanToReceiveData)
 		if fmt.Sprintf("%T", action) == constants.JsonNameOfStruct {
-			// log.Println("Stuff to count:")
+			// log.Printf("Stuff to count for actor with identity: %s:",actor.Identity)
 		} else if fmt.Sprintf("%T", action) == constants.PanicMessageType {
 			log.Println("ERROR:")
 			errMessageForSupervisor := &msgType.ErrorForSupervisor{
 				FailedActorIdentity: actor.Identity,
-				PanicFunction: func() {
-					panic("actor with identity:" + actor.Identity + "received error message")
+				PanicWithRecoveryFunction: func() {
+					panic("actor with identity: " + actor.Identity + "received error message")
 				},
 			}
 			actor.ChanToSendError = make(chan *msgType.ErrorForSupervisor, constants.GlobalChanSize)
 			actor.ChanToSendError <- errMessageForSupervisor
+			newSupervisor.SendMessage(<-actor.ChanToSendError)
 		}
 	}
 }

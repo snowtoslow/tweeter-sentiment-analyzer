@@ -36,3 +36,12 @@ func main() {
 	}
 
 }
+
+/*connectiin = MakeConnActor
+router = MakeRouterActor
+DynSup = Make
+AutoScale = Make
+
+Reg = Make
+Reg.register(...)
+AppSup.link*/
