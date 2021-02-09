@@ -2,30 +2,20 @@ package actor_model
 
 import (
 	"tweeter-sentiment-analyzer/actor-model/connectionactor"
+	"tweeter-sentiment-analyzer/actor-model/routeractor"
 )
 
-func RunApp(arr []string) {
+func RunApp(arr []string) error {
 
 	connectionMaker := connectionactor.NewConnectionActor("connection")
 
-	/*routerActor, err := routeractor.NewRouterActor("router", 5) // here is created router actor which is also a siple actor but which can route messages to actors from pool!
+	routerActor, err := routeractor.NewRouterActor("router", 5) // here is created router actor which is also a siple actor but which can route messages to actors from pool!
 	if err != nil {
-		log.Println(err)
-	}*/
-
-	/*c := make(chan string,10)
-	for _,v :=range arr[:2]{
-		c = connectionMaker.getPreparedData(connectionMaker.makeReqPipeline(v))
+		return err
 	}
 
-	for data := range c {
-		log.Printf("Items saved: %+v", data)
-	}*/
+	//connectionMaker.SendDataToConnectionActor(connectionMaker.ReceivePreparedData(arr[:2])) before commenting SendDatToChan
+	connectionMaker.ReceivePreparedData(arr[:2], routerActor.ChanToRecvMsg)
 
-	/*	for _,v :=range arr[:2]{
-		connectionMaker.SendDataToConnectionActor(connectionMaker.getPreparedData(connectionMaker.makeReqPipeline(v)))
-	}*/
-
-	connectionMaker.SendDataToConnectionActor(connectionMaker.ReceivePreparedData(arr[:2]))
-
+	return nil
 }

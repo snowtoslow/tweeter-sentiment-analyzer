@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"log"
 	"net/http"
+	"regexp"
 	"tweeter-sentiment-analyzer/constants"
 )
 
@@ -15,23 +16,31 @@ func NewConnectionActor(actorName string) *ConnectionActor {
 		ChanToSendData: chanToSendData,
 	}
 
-	go connectionMaker.actorLoop()
+	//go connectionMaker.actorLoop()
+	//we can uncomment it but the could ud become more harder wo change because we need the ability to send to a new chan
 
 	return connectionMaker
 }
 
-func (connectionMaker *ConnectionActor) SendDataToConnectionActor(recch <-chan string) {
+/*func (connectionMaker *ConnectionActor) SendDataToConnectionActor(recch <-chan string) {
 	for msg := range recch {
 		connectionMaker.sendMessage(msg)
 	}
-}
+}*/
 
-func (connectionMaker *ConnectionActor) ReceivePreparedData(arr []string) chan string {
-	c := make(chan string, 10)
+func (connectionMaker *ConnectionActor) ReceivePreparedData(arr []string, ch chan string) {
+	//c := make(chan string, 10)
 	for _, v := range arr[:2] {
-		c = connectionMaker.getPreparedData(connectionMaker.makeReqPipeline(v))
+		/*c = connectionMaker.getPreparedData(connectionMaker.makeReqPipeline(v))*/
+		for msg := range connectionMaker.getPreparedData(connectionMaker.makeReqPipeline(v)) {
+			ch <- connectionMaker.createMessage(msg)
+		}
 	}
-	return c
+
+	/*for msg := range c {
+		connectionMaker.sendMessage(msg)
+	}*/
+	//return c
 }
 
 func (connectionMaker *ConnectionActor) getPreparedData(ic <-chan string) chan string {
@@ -63,13 +72,22 @@ func (connectionMaker *ConnectionActor) makeReqPipeline(url string) chan string 
 	return dataFlowChan
 }
 
+func (connectionMaker *ConnectionActor) createMessage(data string) string {
+	connectionMaker.ChanToSendData <- data
+	return <-connectionMaker.ChanToSendData
+}
+
 func (connectionMaker *ConnectionActor) sendMessage(data string) {
 	connectionMaker.ChanToSendData <- data
 }
 
 func (connectionMaker *ConnectionActor) actorLoop() {
 	defer close(connectionMaker.ChanToSendData)
+	regexData := regexp.MustCompile(constants.JsonRegex)
 	for {
-		log.Println("HERE:", <-connectionMaker.ChanToSendData)
+		receivedString := regexData.FindString(<-connectionMaker.ChanToSendData)
+		if receivedString == constants.PanicMessage {
+			log.Println("ERROR!")
+		}
 	}
 }
