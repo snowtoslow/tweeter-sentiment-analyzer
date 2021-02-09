@@ -49,6 +49,11 @@ func (actor *Actor) actorLoop() {
 			errMessageForSupervisor := &msgType.ErrorForSupervisor{
 				FailedActorIdentity: actor.Identity,
 				PanicWithRecoveryFunction: func() {
+					defer func() {
+						if err := recover(); err != nil {
+							log.Printf("ACTOR WITH IDENTITY %s WAS RECOVERED AFTER PANIC!", actor.Identity)
+						}
+					}()
 					panic("actor with identity: " + actor.Identity + "received error message")
 				},
 			}
