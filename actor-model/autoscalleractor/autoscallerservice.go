@@ -2,6 +2,7 @@ package autoscalleractor
 
 import (
 	"log"
+	"time"
 	"tweeter-sentiment-analyzer/constants"
 )
 
@@ -24,13 +25,17 @@ func (autoscaller *AutoscallerActor) sendMessage(data string) {
 
 func (autoscaller *AutoscallerActor) actorLoop() {
 	defer close(autoscaller.ChanToReceiveMessagesForCount)
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+	counter := 0
 	for {
-		log.Println("AUTOSCALLER TEST:", <-autoscaller.ChanToReceiveMessagesForCount)
+		select {
+		case <-autoscaller.ChanToReceiveMessagesForCount:
+			//log.Println(<-autoscaller.ChanToReceiveMessagesForCount)
+		case <-ticker.C:
+			counter += len(<-autoscaller.ChanToReceiveMessagesForCount)
+			log.Println("COUNTER:", counter)
+		}
 	}
+
 }
-
-/*func (autoscaller *AutoscallerActor) processReceivedMsg(dataToRecv string){
-	regexData := regexp.MustCompile(constants.JsonRegex)
-	receivedString := regexData.FindString(dataToRecv)
-
-}*/

@@ -3,6 +3,7 @@ package connectionactor
 import (
 	"bufio"
 	"net/http"
+	"regexp"
 	"tweeter-sentiment-analyzer/constants"
 	"tweeter-sentiment-analyzer/utils"
 )
@@ -24,20 +25,16 @@ func NewConnectionActor(actorName string, routesArray []string) *ConnectionActor
 
 func (connectionMaker *ConnectionActor) SendDataToMultipleActorsOverChan(cs ...chan string) {
 	for msg := range connectionMaker.receivePreparedData(connectionMaker.AddressRoutesArray) {
-		for _, v := range cs {
-			v <- connectionMaker.createMessage(msg)
+		for range cs {
+			select {
+			case cs[0] <- msg:
+				cs[0] <- connectionMaker.createMessage(msg)
+			case cs[1] <- msg:
+				cs[1] <- regexp.MustCompile(constants.JsonRegex).FindString(msg)
+			}
+			//v <- connectionMaker.createMessage(msg)
 		}
 	}
-
-	/*for msg := range connectionMaker.receivePreparedData(connectionMaker.AddressRoutesArray) {
-		for _,v  := range cs{
-			go func(v chan string) {
-				//connectionMaker.SendDataToActorChan(v)
-				v <- connectionMaker.createMessage(msg)
-			}(v)
-		}
-	}*/
-	//ask Alex about if its correct
 }
 
 func (connectionMaker *ConnectionActor) SendDataToActorChan(ch chan string) {
@@ -87,28 +84,3 @@ func (connectionMaker *ConnectionActor) createMessage(data string) string {
 	connectionMaker.ChanToSendData <- data
 	return <-connectionMaker.ChanToSendData
 }
-
-/*func (connectionMaker *ConnectionActor) sendMessage(data string) {
-	connectionMaker.ChanToSendData <- data
-}
-
-func (connectionMaker *ConnectionActor) actorLoop() {
-	defer close(connectionMaker.ChanToSendData)
-	regexData := regexp.MustCompile(constants.JsonRegex)
-	for {
-		receivedString := regexData.FindString(<-connectionMaker.ChanToSendData)
-		if receivedString == constants.PanicMessage {
-			log.Println("ERROR!")
-		}
-	}
-}
-
-//received prepared data method before adding merge of two chan function;
-func (connectionMaker *ConnectionActor) ReceivePreparedData(arr []string) chan string {
-	c := make(chan string, 10)
-	for _, v := range arr[:2] {
-		c = connectionMaker.getPreparedData(connectionMaker.makeReqPipeline(v))
-	}
-
-	return c
-}*/
