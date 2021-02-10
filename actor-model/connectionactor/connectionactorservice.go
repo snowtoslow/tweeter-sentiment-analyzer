@@ -22,13 +22,31 @@ func NewConnectionActor(actorName string, routesArray []string) *ConnectionActor
 	return connectionMaker
 }
 
-func (connectionMaker *ConnectionActor) SendDataToDifferentActorsOverChan(ch chan string) {
-	for msg := range connectionMaker.receivePreparedDataTest(connectionMaker.AddressRoutesArray) {
+func (connectionMaker *ConnectionActor) SendDataToMultipleActorsOverChan(cs ...chan string) {
+	for msg := range connectionMaker.receivePreparedData(connectionMaker.AddressRoutesArray) {
+		for _, v := range cs {
+			v <- connectionMaker.createMessage(msg)
+		}
+	}
+
+	/*for msg := range connectionMaker.receivePreparedData(connectionMaker.AddressRoutesArray) {
+		for _,v  := range cs{
+			go func(v chan string) {
+				//connectionMaker.SendDataToActorChan(v)
+				v <- connectionMaker.createMessage(msg)
+			}(v)
+		}
+	}*/
+	//ask Alex about if its correct
+}
+
+func (connectionMaker *ConnectionActor) SendDataToActorChan(ch chan string) {
+	for msg := range connectionMaker.receivePreparedData(connectionMaker.AddressRoutesArray) {
 		ch <- connectionMaker.createMessage(msg)
 	}
 }
 
-func (connectionMaker *ConnectionActor) receivePreparedDataTest(arr []string) chan string {
+func (connectionMaker *ConnectionActor) receivePreparedData(arr []string) chan string {
 	chansArr := make([]chan string, len(arr))
 	for k, v := range arr {
 		chansArr[k] = connectionMaker.getPreparedData(connectionMaker.makeReqPipeline(v))
