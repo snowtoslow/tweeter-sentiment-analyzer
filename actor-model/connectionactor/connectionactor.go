@@ -1,7 +1,7 @@
 package connectionactor
 
 type ConnectionActor struct {
-	Identity       string
-	ChanToSendData chan string
-	AddressArray   []string
+	Identity           string
+	ChanToSendData     chan string
+	AddressRoutesArray []string
 }

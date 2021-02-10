@@ -2,18 +2,18 @@ package connectionactor
 
 import (
 	"bufio"
-	"log"
 	"net/http"
-	"regexp"
 	"tweeter-sentiment-analyzer/constants"
+	"tweeter-sentiment-analyzer/utils"
 )
 
-func NewConnectionActor(actorName string) *ConnectionActor {
+func NewConnectionActor(actorName string, routesArray []string) *ConnectionActor {
 	chanToSendData := make(chan string, constants.GlobalChanSize)
 
 	connectionMaker := &ConnectionActor{
-		Identity:       actorName + constants.ActorName,
-		ChanToSendData: chanToSendData,
+		Identity:           actorName + constants.ActorName,
+		ChanToSendData:     chanToSendData,
+		AddressRoutesArray: routesArray,
 	}
 
 	//go connectionMaker.actorLoop()
@@ -22,25 +22,18 @@ func NewConnectionActor(actorName string) *ConnectionActor {
 	return connectionMaker
 }
 
-/*func (connectionMaker *ConnectionActor) SendDataToConnectionActor(recch <-chan string) {
-	for msg := range recch {
-		connectionMaker.sendMessage(msg)
+func (connectionMaker *ConnectionActor) SendDataToDifferentActorsOverChan(ch chan string) {
+	for msg := range connectionMaker.receivePreparedDataTest(connectionMaker.AddressRoutesArray) {
+		ch <- connectionMaker.createMessage(msg)
 	}
-}*/
+}
 
-func (connectionMaker *ConnectionActor) ReceivePreparedData(arr []string, ch chan string) {
-	//c := make(chan string, 10)
-	for _, v := range arr[:2] {
-		/*c = connectionMaker.getPreparedData(connectionMaker.makeReqPipeline(v))*/
-		for msg := range connectionMaker.getPreparedData(connectionMaker.makeReqPipeline(v)) {
-			ch <- connectionMaker.createMessage(msg)
-		}
+func (connectionMaker *ConnectionActor) receivePreparedDataTest(arr []string) chan string {
+	chansArr := make([]chan string, len(arr))
+	for k, v := range arr {
+		chansArr[k] = connectionMaker.getPreparedData(connectionMaker.makeReqPipeline(v))
 	}
-
-	/*for msg := range c {
-		connectionMaker.sendMessage(msg)
-	}*/
-	//return c
+	return utils.MergeWait(chansArr...)
 }
 
 func (connectionMaker *ConnectionActor) getPreparedData(ic <-chan string) chan string {
@@ -77,7 +70,7 @@ func (connectionMaker *ConnectionActor) createMessage(data string) string {
 	return <-connectionMaker.ChanToSendData
 }
 
-func (connectionMaker *ConnectionActor) sendMessage(data string) {
+/*func (connectionMaker *ConnectionActor) sendMessage(data string) {
 	connectionMaker.ChanToSendData <- data
 }
 
@@ -91,3 +84,13 @@ func (connectionMaker *ConnectionActor) actorLoop() {
 		}
 	}
 }
+
+//received prepared data method before adding merge of two chan function;
+func (connectionMaker *ConnectionActor) ReceivePreparedData(arr []string) chan string {
+	c := make(chan string, 10)
+	for _, v := range arr[:2] {
+		c = connectionMaker.getPreparedData(connectionMaker.makeReqPipeline(v))
+	}
+
+	return c
+}*/

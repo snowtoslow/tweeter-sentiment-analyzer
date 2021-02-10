@@ -5,22 +5,19 @@ import (
 	"tweeter-sentiment-analyzer/constants"
 )
 
-func NewRouterActor(actorName string, actorAmount int) (*RouterActor, error) {
+func NewRouterActor(actorName string, actorPoll []*actor.Actor) *RouterActor {
 	chanToRecvMsg := make(chan string, constants.GlobalChanSize)
-	actorPool, err := actor.CreateActorPoll(actorAmount) // actor pool created here!
-	if err != nil {
-		return nil, err
-	}
+
 	routerActor := &RouterActor{
 		Identity:          actorName + constants.ActorName,
 		ChanToRecvMsg:     chanToRecvMsg,
 		CurrentActorIndex: 0,
-		Actors:            actorPool,
+		Actors:            actorPoll,
 	}
 
 	go routerActor.actorLoop() //actor loop for balancing;
 
-	return routerActor, nil
+	return routerActor
 }
 
 func (routerActor *RouterActor) SendMessage(data string) {

@@ -1,21 +1,28 @@
 package actor_model
 
 import (
+	"tweeter-sentiment-analyzer/actor-model/actor"
 	"tweeter-sentiment-analyzer/actor-model/connectionactor"
 	"tweeter-sentiment-analyzer/actor-model/routeractor"
 )
 
 func RunApp(arr []string) error {
+	//my connection actor
+	connectionMaker := connectionactor.NewConnectionActor("connection", arr)
 
-	connectionMaker := connectionactor.NewConnectionActor("connection")
-
-	routerActor, err := routeractor.NewRouterActor("router", 5) // here is created router actor which is also a siple actor but which can route messages to actors from pool!
+	//my actor poll
+	actorPool, err := actor.CreateActorPoll(5) // actor pool created here!
 	if err != nil {
 		return err
 	}
 
-	//connectionMaker.SendDataToConnectionActor(connectionMaker.ReceivePreparedData(arr[:2])) before commenting SendDatToChan
-	connectionMaker.ReceivePreparedData(arr[:2], routerActor.ChanToRecvMsg)
+	//my router actor
+	routerActor := routeractor.NewRouterActor("router", actorPool) // here is created router actor which is also a siple actor but which can route messages to actors from pool!
+
+	connectionMaker.SendDataToDifferentActorsOverChan(routerActor.ChanToRecvMsg) //before commenting SendDatToChan
 
 	return nil
 }
+
+//stuff before add merge chan method;
+//connectionMaker.ReceivePreparedData(arr[:2], routerActor.ChanToRecvMsg)
