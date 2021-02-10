@@ -2,6 +2,7 @@ package actor_model
 
 import (
 	"tweeter-sentiment-analyzer/actor-model/actor"
+	"tweeter-sentiment-analyzer/actor-model/autoscalleractor"
 	"tweeter-sentiment-analyzer/actor-model/connectionactor"
 	"tweeter-sentiment-analyzer/actor-model/routeractor"
 )
@@ -20,6 +21,10 @@ func RunApp(arr []string) error {
 	routerActor := routeractor.NewRouterActor("router", actorPool) // here is created router actor which is also a siple actor but which can route messages to actors from pool!
 
 	connectionMaker.SendDataToDifferentActorsOverChan(routerActor.ChanToRecvMsg) //before commenting SendDatToChan
+
+	autoscallerActor := autoscalleractor.NewAutoscallerActor("autoscaller")
+
+	connectionMaker.SendDataToDifferentActorsOverChan(autoscallerActor.ChanToReceiveMessagesForCount)
 
 	return nil
 }
