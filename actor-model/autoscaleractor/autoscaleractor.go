@@ -1,6 +1,6 @@
-package autoscalleractor
+package autoscaleractor
 
-type AutoscallerActor struct {
+type AutoscalingActor struct {
 	Identity                      string
 	ChanToReceiveMessagesForCount chan string
 	ChanToSendCounterResult       chan int

@@ -23,3 +23,15 @@ func GetChanData(actorChan chan string) interface{} {
 		return tweetMsg
 	}
 }
+
+func CreateMessageType(processedString string) interface{} {
+	if processedString == constants.PanicMessage {
+		return msgType.PanicMessage(processedString)
+	} else {
+		var tweetMsg *models.MyJsonName
+		if err := json.Unmarshal([]byte(processedString), &tweetMsg); err != nil {
+			return err
+		}
+		return tweetMsg
+	}
+}

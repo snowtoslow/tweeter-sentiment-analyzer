@@ -3,7 +3,6 @@ package connectionactor
 import (
 	"bufio"
 	"net/http"
-	"regexp"
 	"tweeter-sentiment-analyzer/constants"
 	"tweeter-sentiment-analyzer/utils"
 )
@@ -25,30 +24,18 @@ func NewConnectionActor(actorName string, routesArray []string) *ConnectionActor
 
 func (connectionMaker *ConnectionActor) SendDataToMultipleActorsOverChan(cs ...chan string) {
 	for msg := range connectionMaker.receivePreparedData(connectionMaker.AddressRoutesArray) {
-		for range cs {
-			select {
-			case cs[0] <- msg:
-				cs[0] <- connectionMaker.createMessage(msg)
-			case cs[1] <- msg:
-				cs[1] <- regexp.MustCompile(constants.JsonRegex).FindString(msg)
-			}
-			//v <- connectionMaker.createMessage(msg)
+		for _, v := range cs {
+			v <- connectionMaker.createMessage(msg)
 		}
 	}
 }
 
-func (connectionMaker *ConnectionActor) SendDataToActorChan(ch chan string) {
-	for msg := range connectionMaker.receivePreparedData(connectionMaker.AddressRoutesArray) {
-		ch <- connectionMaker.createMessage(msg)
-	}
-}
-
 func (connectionMaker *ConnectionActor) receivePreparedData(arr []string) chan string {
-	chansArr := make([]chan string, len(arr))
+	arrayOfChannels := make([]chan string, len(arr))
 	for k, v := range arr {
-		chansArr[k] = connectionMaker.getPreparedData(connectionMaker.makeReqPipeline(v))
+		arrayOfChannels[k] = connectionMaker.getPreparedData(connectionMaker.makeReqPipeline(v))
 	}
-	return utils.MergeWait(chansArr...)
+	return utils.MergeWait(arrayOfChannels...)
 }
 
 func (connectionMaker *ConnectionActor) getPreparedData(ic <-chan string) chan string {
