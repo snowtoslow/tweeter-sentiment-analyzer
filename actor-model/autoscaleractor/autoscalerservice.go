@@ -2,8 +2,10 @@ package autoscaleractor
 
 import (
 	"log"
+	"regexp"
 	"time"
 	"tweeter-sentiment-analyzer/constants"
+	"tweeter-sentiment-analyzer/utils"
 )
 
 func NewAutoscalingActor(actorName string) *AutoscalingActor {
@@ -28,14 +30,21 @@ func (autoscalingActor *AutoscalingActor) actorLoop() {
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 	counter := 0
+	prevCounter := 0
 	for {
 		select {
 		case msg := <-autoscalingActor.ChanToReceiveMessagesForCount:
-			if len(msg) != 0 {
+			action := regexp.MustCompile(constants.JsonRegex).FindString(msg)
+			if len(action) != 0 {
 				counter++
 			}
 		case <-ticker.C:
-			log.Println("Length:", counter)
+			//log.Println("COUNTER:", counter)
+			//log.Println("PREV COUNTER:",prevCounter)
+			prevCounter = counter
+			movingAverage := utils.MovingExpAvg(float64(counter), float64(prevCounter), 1, 2)
+			log.Println("Actor number:", int(movingAverage/20))
+			//autoscalingActor.ChanToSendCounterResult<-int(movingAverage/20)
 			counter = 0
 		}
 	}

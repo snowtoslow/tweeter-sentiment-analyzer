@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/json"
+	"math"
 	"regexp"
 	"strings"
 	msgType "tweeter-sentiment-analyzer/actor-model/message-types"
@@ -34,4 +35,10 @@ func CreateMessageType(processedString string) interface{} {
 		}
 		return tweetMsg
 	}
+}
+
+func MovingExpAvg(value, oldValue, fdtime, ftime float64) float64 {
+	alpha := 1.0 - math.Exp(-fdtime/ftime)
+	r := alpha*value + (1.0-alpha)*oldValue
+	return r
 }

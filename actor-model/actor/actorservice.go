@@ -47,6 +47,8 @@ func actionsLog(action interface{}) {
 		//log.Println("Stuff to count:")
 	} else if fmt.Sprintf("%T", action) == constants.PanicMessageType {
 		log.Println("ERROR:")
+	} else {
+		//log.Printf("Nil is received!")
 	}
 }
 
