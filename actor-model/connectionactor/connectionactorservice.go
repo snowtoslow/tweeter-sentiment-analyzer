@@ -7,13 +7,12 @@ import (
 	"tweeter-sentiment-analyzer/utils"
 )
 
-func NewConnectionActor(actorName string, routesArray []string) *ConnectionActor {
+func NewConnectionActor(actorName string) *ConnectionActor {
 	chanToSendData := make(chan string, constants.GlobalChanSize)
 
 	connectionMaker := &ConnectionActor{
-		Identity:           actorName + constants.ActorName,
-		ChanToSendData:     chanToSendData,
-		AddressRoutesArray: routesArray,
+		Identity:       actorName + constants.ActorName,
+		ChanToSendData: chanToSendData,
 	}
 
 	//go connectionMaker.actorLoop()
@@ -22,8 +21,8 @@ func NewConnectionActor(actorName string, routesArray []string) *ConnectionActor
 	return connectionMaker
 }
 
-func (connectionMaker *ConnectionActor) SendDataToMultipleActorsOverChan(cs ...chan string) {
-	for msg := range connectionMaker.receivePreparedData(connectionMaker.AddressRoutesArray) {
+func (connectionMaker *ConnectionActor) SendDataToMultipleActorsOverChan(routes []string, cs ...chan string) {
+	for msg := range connectionMaker.receivePreparedData(routes) {
 		for _, v := range cs {
 			v <- connectionMaker.createMessage(msg)
 		}

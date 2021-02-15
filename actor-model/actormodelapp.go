@@ -9,20 +9,22 @@ import (
 
 func RunApp(arr []string) error {
 	dynamicSupervisor := dynamicsupervisor.NewDynamicSupervisor("dynamic_supervisor")
-	//my connection actor
-	connectionMaker := connectionactor.NewConnectionActor("connection", arr)
+	//my connection workeractor
+	connectionMaker := connectionactor.NewConnectionActor("connection")
 
 	actorPoll, err := dynamicSupervisor.CreateActorPoll(5)
 	if err != nil {
 		return err
 	}
 
-	//my router actor
+	//my router workeractor
 	routerActor := routeractor.NewRouterActor("router", actorPoll)
 
 	autoscalingActor := autoscaleractor.NewAutoscalingActor("autoscaling", dynamicSupervisor.ChanToReceiveNumberOfActorsToCreate)
 
-	connectionMaker.SendDataToMultipleActorsOverChan(routerActor.ChanToRecvMsg, autoscalingActor.ChanToReceiveMessagesForCount)
+	connectionMaker.SendDataToMultipleActorsOverChan(arr, routerActor.ChanToRecvMsg, autoscalingActor.ChanToReceiveMessagesForCount)
+
+	//actorregistry.MyActorRegistry.TestFindActorByName("dynamicSupervisor")
 
 	return nil
 }

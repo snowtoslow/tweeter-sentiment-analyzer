@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"tweeter-sentiment-analyzer/actor-model/actor"
+	"tweeter-sentiment-analyzer/actor-model/workeractor"
 	"tweeter-sentiment-analyzer/constants"
 )
 
@@ -21,13 +21,13 @@ func NewDynamicSupervisor(actorName string) *DynamicSupervisor {
 	return dynamicSupervisor
 }
 
-func (dynamicSupervisor *DynamicSupervisor) CreateActorPoll(numberOfActors int) (actorPoll *[]actor.Actor, err error) {
-	actorPoll = new([]actor.Actor)
+func (dynamicSupervisor *DynamicSupervisor) CreateActorPoll(numberOfActors int) (actorPoll *[]workeractor.Actor, err error) {
+	actorPoll = new([]workeractor.Actor)
 	if numberOfActors <= 1 {
 		return nil, fmt.Errorf("number of actors could not be smaller or equal with one")
 	}
 	for i := 0; i < numberOfActors; i++ {
-		*actorPoll = append(*actorPoll, *actor.NewActor("working_" + strconv.Itoa(i)))
+		*actorPoll = append(*actorPoll, *workeractor.NewActor("working_" + strconv.Itoa(i)))
 	}
 	return
 }

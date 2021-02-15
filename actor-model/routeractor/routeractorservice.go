@@ -1,11 +1,11 @@
 package routeractor
 
 import (
-	"tweeter-sentiment-analyzer/actor-model/actor"
+	worker_actor "tweeter-sentiment-analyzer/actor-model/workeractor"
 	"tweeter-sentiment-analyzer/constants"
 )
 
-func NewRouterActor(actorName string, actorPoll *[]actor.Actor) *RouterActor {
+func NewRouterActor(actorName string, actorPoll *[]worker_actor.Actor) *RouterActor {
 	chanToRecvMsg := make(chan string, constants.GlobalChanSize)
 
 	routerActor := &RouterActor{
@@ -15,7 +15,7 @@ func NewRouterActor(actorName string, actorPoll *[]actor.Actor) *RouterActor {
 		Actors:            actorPoll,
 	}
 
-	go routerActor.actorLoop() //actor loop for balancing;
+	go routerActor.actorLoop() //workeractor loop for balancing;
 
 	return routerActor
 }

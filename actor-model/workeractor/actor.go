@@ -1,4 +1,4 @@
-package actor
+package workeractor
 
 type Actor struct {
 	Identity          string
