@@ -5,7 +5,7 @@ import (
 	"tweeter-sentiment-analyzer/constants"
 )
 
-func NewRouterActor(actorName string, actorPoll []*actor.Actor) *RouterActor {
+func NewRouterActor(actorName string, actorPoll *[]actor.Actor) *RouterActor {
 	chanToRecvMsg := make(chan string, constants.GlobalChanSize)
 
 	routerActor := &RouterActor{
@@ -29,10 +29,10 @@ func (routerActor *RouterActor) actorLoop() {
 	for {
 		select {
 		case output := <-routerActor.ChanToRecvMsg:
-			if routerActor.CurrentActorIndex >= len(routerActor.Actors) {
+			if routerActor.CurrentActorIndex >= len(*routerActor.Actors) {
 				routerActor.CurrentActorIndex = 0
 			}
-			routerActor.Actors[routerActor.CurrentActorIndex].SendMessage(output) // change here from routerActor.Actors[routerActor.CurrentActorIndex].ChanToReceiveData <- output
+			(*routerActor.Actors)[routerActor.CurrentActorIndex].SendMessage(output) // change here from routerActor.Actors[routerActor.CurrentActorIndex].ChanToReceiveData <- output
 			routerActor.CurrentActorIndex++
 		}
 	}

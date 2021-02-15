@@ -21,12 +21,13 @@ func NewDynamicSupervisor(actorName string) *DynamicSupervisor {
 	return dynamicSupervisor
 }
 
-func (dynamicSupervisor *DynamicSupervisor) CreateActorPoll(numberOfActors int) (actorPoll []*actor.Actor, err error) {
+func (dynamicSupervisor *DynamicSupervisor) CreateActorPoll(numberOfActors int) (actorPoll *[]actor.Actor, err error) {
+	actorPoll = new([]actor.Actor)
 	if numberOfActors <= 1 {
 		return nil, fmt.Errorf("number of actors could not be smaller or equal with one")
 	}
 	for i := 0; i < numberOfActors; i++ {
-		actorPoll = append(actorPoll, actor.NewActor("working_"+strconv.Itoa(i)))
+		*actorPoll = append(*actorPoll, *actor.NewActor("working_" + strconv.Itoa(i)))
 	}
 	return
 }
@@ -34,16 +35,22 @@ func (dynamicSupervisor *DynamicSupervisor) CreateActorPoll(numberOfActors int) 
 func (dynamicSupervisor *DynamicSupervisor) actorLoop() {
 	defer close(dynamicSupervisor.ChanToReceiveNumberOfActorsToCreate)
 	for {
-		log.Println("IN DYNAMIC:", <-dynamicSupervisor.ChanToReceiveNumberOfActorsToCreate)
+		actorNumber := <-dynamicSupervisor.ChanToReceiveNumberOfActorsToCreate
+		if actorNumber == 0 {
+			log.Println("SKIP")
+			continue
+		} else if actorNumber < 0 {
+			dynamicSupervisor.deleteActors()
+		} else {
+			dynamicSupervisor.addActors()
+		}
 	}
 }
 
 func (dynamicSupervisor *DynamicSupervisor) addActors() {
-
+	log.Println("Add actors")
 }
 
 func (dynamicSupervisor *DynamicSupervisor) deleteActors() {
-
+	log.Println("Delete actors")
 }
-
-func (dynamicSupervisor *DynamicSupervisor) createMainActorPool() {}
