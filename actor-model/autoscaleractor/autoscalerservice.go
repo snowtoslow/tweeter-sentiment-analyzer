@@ -1,14 +1,13 @@
 package autoscaleractor
 
 import (
-	"log"
 	"regexp"
 	"time"
 	"tweeter-sentiment-analyzer/constants"
 	"tweeter-sentiment-analyzer/utils"
 )
 
-func NewAutoscalingActor(actorName string) *AutoscalingActor {
+func NewAutoscalingActor(actorName string, ch chan int) *AutoscalingActor {
 	chanForMessages := make(chan string, constants.GlobalChanSize)
 
 	autoscalingActor := &AutoscalingActor{
@@ -16,16 +15,12 @@ func NewAutoscalingActor(actorName string) *AutoscalingActor {
 		ChanToReceiveMessagesForCount: chanForMessages,
 	}
 
-	go autoscalingActor.actorLoop()
+	go autoscalingActor.actorLoop(ch)
 
 	return autoscalingActor
 }
 
-func (autoscalingActor *AutoscalingActor) sendMessage(data string) {
-	autoscalingActor.ChanToReceiveMessagesForCount <- data
-}
-
-func (autoscalingActor *AutoscalingActor) actorLoop() {
+func (autoscalingActor *AutoscalingActor) actorLoop(ch chan int) {
 	defer close(autoscalingActor.ChanToReceiveMessagesForCount)
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
@@ -41,11 +36,24 @@ func (autoscalingActor *AutoscalingActor) actorLoop() {
 		case <-ticker.C:
 			//log.Println("COUNTER:", counter)
 			//log.Println("PREV COUNTER:",prevCounter)
+			autoscalingActor.sendMsgToSupervisor(&counter, &prevCounter, ch)
 			prevCounter = counter
-			movingAverage := utils.MovingExpAvg(float64(counter), float64(prevCounter), 1, 2)
-			log.Println("Actor number:", int(movingAverage/20))
-			//autoscalingActor.ChanToSendCounterResult<-int(movingAverage/20)
 			counter = 0
 		}
 	}
+}
+
+func (autoscalingActor *AutoscalingActor) sendMsgToSupervisor(counter *int, prevCounter *int, supervisorChan chan int) {
+	for counter := range autoscalingActor.sendCountedMessageToTmpChanTest(counter, prevCounter) {
+		supervisorChan <- counter
+	}
+}
+
+func (autoscalingActor *AutoscalingActor) sendCountedMessageToTmpChanTest(counter *int, prevCounter *int) chan int {
+	autoscalingActor.ChanToSendCounterResult = make(chan int, constants.GlobalChanSize)
+	go func() {
+		autoscalingActor.ChanToSendCounterResult <- int(utils.MovingExpAvg(float64(*counter), float64(*prevCounter), 1, 2)) / 15
+		close(autoscalingActor.ChanToSendCounterResult)
+	}()
+	return autoscalingActor.ChanToSendCounterResult
 }

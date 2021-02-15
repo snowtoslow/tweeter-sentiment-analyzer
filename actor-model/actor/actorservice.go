@@ -4,20 +4,9 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strconv"
 	"tweeter-sentiment-analyzer/constants"
 	"tweeter-sentiment-analyzer/utils"
 )
-
-func CreateActorPoll(numberOfActors int) (actorPoll []*Actor, err error) {
-	if numberOfActors <= 1 {
-		return nil, fmt.Errorf("number of actors could not be smaller or equal with one")
-	}
-	for i := 0; i < numberOfActors; i++ {
-		actorPoll = append(actorPoll, NewActor("working_"+strconv.Itoa(i)))
-	}
-	return
-}
 
 func NewActor(actorName string) *Actor {
 	chanToRecv := make(chan string, constants.GlobalChanSize)
