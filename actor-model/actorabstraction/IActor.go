@@ -1,5 +1,6 @@
 package actorabstraction
 
 type IActor interface {
-	NewActor(actorName string)
+	ActorLoop()
+	SendMessage(msg interface{})
 }

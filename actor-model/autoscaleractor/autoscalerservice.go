@@ -3,11 +3,13 @@ package autoscaleractor
 import (
 	"regexp"
 	"time"
+	"tweeter-sentiment-analyzer/actor-model/actorregistry"
+	"tweeter-sentiment-analyzer/actor-model/dynamicsupervisor"
 	"tweeter-sentiment-analyzer/constants"
 	"tweeter-sentiment-analyzer/utils"
 )
 
-func NewAutoscalingActor(actorName string, ch chan int) *AutoscalingActor {
+func NewAutoscalingActor(actorName string) *AutoscalingActor {
 	chanForMessages := make(chan string, constants.GlobalChanSize)
 
 	autoscalingActor := &AutoscalingActor{
@@ -15,12 +17,14 @@ func NewAutoscalingActor(actorName string, ch chan int) *AutoscalingActor {
 		ChanToReceiveMessagesForCount: chanForMessages,
 	}
 
-	go autoscalingActor.actorLoop(ch)
+	(*actorregistry.MyActorRegistry)["autoscalingActor"] = autoscalingActor
+
+	go autoscalingActor.ActorLoop()
 
 	return autoscalingActor
 }
 
-func (autoscalingActor *AutoscalingActor) actorLoop(ch chan int) {
+func (autoscalingActor *AutoscalingActor) ActorLoop() {
 	defer close(autoscalingActor.ChanToReceiveMessagesForCount)
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
@@ -42,24 +46,14 @@ func (autoscalingActor *AutoscalingActor) actorLoop(ch chan int) {
 			movingAvg = int(utils.MovingExpAvg(float64(counter), float64(prevCounter), 1, 2)) / 15
 			prevCounter = counter
 			counter = 0
-			autoscalingActor.sendMsgToSupervisor(movingAvg, prevMovingAvg, ch)
+			//log.Println("HERE:",actorregistry.MyActorRegistry.TestFindActorByName("dynamic_supervisor"))
+			autoscalingActor.SendMessage(movingAvg - prevMovingAvg)
 			//log.Println("prev mov avg:",prevMovingAvg)
 			//log.Println("moving avg:",movingAvg)
 		}
 	}
 }
 
-func (autoscalingActor *AutoscalingActor) sendMsgToSupervisor(counter int, prevCounter int, supervisorChan chan int) {
-	for counter := range autoscalingActor.sendCountedMessageToTmpChanTest(counter, prevCounter) {
-		supervisorChan <- counter
-	}
-}
-
-func (autoscalingActor *AutoscalingActor) sendCountedMessageToTmpChanTest(movAvg int, prevMovAvg int) chan int {
-	autoscalingActor.ChanToSendCounterResult = make(chan int, constants.GlobalChanSize)
-	go func() {
-		autoscalingActor.ChanToSendCounterResult <- movAvg - prevMovAvg
-		close(autoscalingActor.ChanToSendCounterResult)
-	}()
-	return autoscalingActor.ChanToSendCounterResult
+func (autoscalingActor *AutoscalingActor) SendMessage(msg int) {
+	actorregistry.MyActorRegistry.TestFindActorByName("dynamicSupervisor").(*dynamicsupervisor.DynamicSupervisor).ChanToReceiveNumberOfActorsToCreate <- msg
 }

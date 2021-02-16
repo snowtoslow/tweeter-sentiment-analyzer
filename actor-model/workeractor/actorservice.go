@@ -15,11 +15,11 @@ func NewActor(actorName string) *Actor {
 		ChanToReceiveData: chanToRecv,
 	}
 
-	go actor.actorLoop()
+	go actor.ActorLoop()
 	return actor
 }
 
-func (actor *Actor) actorLoop() {
+func (actor *Actor) ActorLoop() {
 	defer close(actor.ChanToReceiveData)
 	for {
 		action := actor.processReceivedMessage(<-actor.ChanToReceiveData)

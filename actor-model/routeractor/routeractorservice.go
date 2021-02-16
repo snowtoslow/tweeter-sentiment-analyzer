@@ -1,21 +1,23 @@
 package routeractor
 
 import (
-	worker_actor "tweeter-sentiment-analyzer/actor-model/workeractor"
+	"tweeter-sentiment-analyzer/actor-model/actorregistry"
+	"tweeter-sentiment-analyzer/actor-model/workeractor"
 	"tweeter-sentiment-analyzer/constants"
 )
 
-func NewRouterActor(actorName string, actorPoll *[]worker_actor.Actor) *RouterActor {
+func NewRouterActor(actorName string) *RouterActor {
 	chanToRecvMsg := make(chan string, constants.GlobalChanSize)
 
 	routerActor := &RouterActor{
 		Identity:          actorName + constants.ActorName,
 		ChanToRecvMsg:     chanToRecvMsg,
 		CurrentActorIndex: 0,
-		Actors:            actorPoll,
 	}
 
-	go routerActor.actorLoop() //workeractor loop for balancing;
+	(*actorregistry.MyActorRegistry)["routerActor"] = routerActor
+
+	go routerActor.ActorLoop() //workeractor loop for balancing;
 
 	return routerActor
 }
@@ -24,15 +26,16 @@ func (routerActor *RouterActor) SendMessage(data string) {
 	routerActor.ChanToRecvMsg <- data
 }
 
-func (routerActor *RouterActor) actorLoop() {
+func (routerActor *RouterActor) ActorLoop() {
 	defer close(routerActor.ChanToRecvMsg)
+	actors := actorregistry.MyActorRegistry.TestFindActorByName("actorPool").([]workeractor.Actor)
 	for {
 		select {
 		case output := <-routerActor.ChanToRecvMsg:
-			if routerActor.CurrentActorIndex >= len(*routerActor.Actors) {
+			if routerActor.CurrentActorIndex >= len(actors) {
 				routerActor.CurrentActorIndex = 0
 			}
-			(*routerActor.Actors)[routerActor.CurrentActorIndex].SendMessage(output) // change here from routerActor.Actors[routerActor.CurrentActorIndex].ChanToReceiveData <- output
+			(actors)[routerActor.CurrentActorIndex].SendMessage(output) // change here from routerActor.Actors[routerActor.CurrentActorIndex].ChanToReceiveData <- output
 			routerActor.CurrentActorIndex++
 		}
 	}

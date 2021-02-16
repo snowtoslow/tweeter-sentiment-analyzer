@@ -12,19 +12,16 @@ func RunApp(arr []string) error {
 	//my connection workeractor
 	connectionMaker := connectionactor.NewConnectionActor("connection")
 
-	actorPoll, err := dynamicSupervisor.CreateActorPoll(5)
-	if err != nil {
+	if err := dynamicSupervisor.CreateActorPoll(5); err != nil {
 		return err
 	}
 
 	//my router workeractor
-	routerActor := routeractor.NewRouterActor("router", actorPoll)
+	routerActor := routeractor.NewRouterActor("router")
 
-	autoscalingActor := autoscaleractor.NewAutoscalingActor("autoscaling", dynamicSupervisor.ChanToReceiveNumberOfActorsToCreate)
+	autoscalingActor := autoscaleractor.NewAutoscalingActor("autoscaling")
 
 	connectionMaker.SendDataToMultipleActorsOverChan(arr, routerActor.ChanToRecvMsg, autoscalingActor.ChanToReceiveMessagesForCount)
-
-	//actorregistry.MyActorRegistry.TestFindActorByName("dynamicSupervisor")
 
 	return nil
 }

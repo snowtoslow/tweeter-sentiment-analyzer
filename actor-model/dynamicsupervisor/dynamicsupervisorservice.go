@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"tweeter-sentiment-analyzer/actor-model/actorregistry"
 	"tweeter-sentiment-analyzer/actor-model/workeractor"
 	"tweeter-sentiment-analyzer/constants"
 )
@@ -16,23 +17,27 @@ func NewDynamicSupervisor(actorName string) *DynamicSupervisor {
 		ChanToReceiveNumberOfActorsToCreate: chanToReceiveAmountOfActorsToCreate,
 	}
 
-	go dynamicSupervisor.actorLoop()
+	(*actorregistry.MyActorRegistry)["dynamicSupervisor"] = dynamicSupervisor
+
+	go dynamicSupervisor.ActorLoop()
 
 	return dynamicSupervisor
 }
 
-func (dynamicSupervisor *DynamicSupervisor) CreateActorPoll(numberOfActors int) (actorPoll *[]workeractor.Actor, err error) {
-	actorPoll = new([]workeractor.Actor)
+func (dynamicSupervisor *DynamicSupervisor) CreateActorPoll(numberOfActors int) (err error) {
+	actorPoll := new([]workeractor.Actor)
 	if numberOfActors <= 1 {
-		return nil, fmt.Errorf("number of actors could not be smaller or equal with one")
+		return fmt.Errorf("number of actors could not be smaller or equal with one")
 	}
 	for i := 0; i < numberOfActors; i++ {
 		*actorPoll = append(*actorPoll, *workeractor.NewActor("working_" + strconv.Itoa(i)))
 	}
+	(*actorregistry.MyActorRegistry)["actorPool"] = *actorPoll
+
 	return
 }
 
-func (dynamicSupervisor *DynamicSupervisor) actorLoop() {
+func (dynamicSupervisor *DynamicSupervisor) ActorLoop() {
 	defer close(dynamicSupervisor.ChanToReceiveNumberOfActorsToCreate)
 	for {
 		actorNumber := <-dynamicSupervisor.ChanToReceiveNumberOfActorsToCreate
@@ -45,6 +50,10 @@ func (dynamicSupervisor *DynamicSupervisor) actorLoop() {
 			dynamicSupervisor.addActors()
 		}
 	}
+}
+
+func (dynamicSupervisor *DynamicSupervisor) SendMessage(msg interface{}) {
+	log.Println("test message!", msg)
 }
 
 func (dynamicSupervisor *DynamicSupervisor) addActors() {
