@@ -3,6 +3,7 @@ package autoscaleractor
 import (
 	"regexp"
 	"time"
+	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 	"tweeter-sentiment-analyzer/actor-model/actorregistry"
 	"tweeter-sentiment-analyzer/actor-model/dynamicsupervisor"
 	"tweeter-sentiment-analyzer/constants"
@@ -13,8 +14,10 @@ func NewAutoscalingActor(actorName string) *AutoscalingActor {
 	chanForMessages := make(chan string, constants.GlobalChanSize)
 
 	autoscalingActor := &AutoscalingActor{
-		Identity:                      actorName + constants.ActorName,
-		ChanToReceiveMessagesForCount: chanForMessages,
+		ActorProps: actorabstraction.AbstractActor{
+			Identity:          actorName + constants.ActorName,
+			ChanToReceiveData: chanForMessages,
+		},
 	}
 
 	(*actorregistry.MyActorRegistry)["autoscalingActor"] = autoscalingActor
@@ -25,7 +28,7 @@ func NewAutoscalingActor(actorName string) *AutoscalingActor {
 }
 
 func (autoscalingActor *AutoscalingActor) ActorLoop() {
-	defer close(autoscalingActor.ChanToReceiveMessagesForCount)
+	defer close(autoscalingActor.ActorProps.ChanToReceiveData)
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 	counter := 0
@@ -34,7 +37,7 @@ func (autoscalingActor *AutoscalingActor) ActorLoop() {
 	movingAvg := 0
 	for {
 		select {
-		case msg := <-autoscalingActor.ChanToReceiveMessagesForCount:
+		case msg := <-autoscalingActor.ActorProps.ChanToReceiveData:
 			action := regexp.MustCompile(constants.JsonRegex).FindString(msg)
 			if len(action) != 0 {
 				counter++

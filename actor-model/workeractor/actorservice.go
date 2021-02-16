@@ -4,31 +4,46 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 	"tweeter-sentiment-analyzer/constants"
 	"tweeter-sentiment-analyzer/utils"
 )
 
-func NewActor(actorName string) *Actor {
+/*func NewActor(actorName string) *ActorProps {
 	chanToRecv := make(chan string, constants.GlobalChanSize)
-	actor := &Actor{
+	actor := &ActorProps{
 		Identity:          actorName + constants.ActorName,
 		ChanToReceiveData: chanToRecv,
 	}
 
 	go actor.ActorLoop()
 	return actor
+}*/
+
+func NewActor(actorName string) *Actor {
+	chanToRecv := make(chan string, constants.GlobalChanSize)
+	actor := &Actor{
+		ActorProps: actorabstraction.AbstractActor{
+			Identity:          actorName + constants.ActorName,
+			ChanToReceiveData: chanToRecv,
+		},
+	}
+
+	go actor.ActorLoop()
+
+	return actor
 }
 
 func (actor *Actor) ActorLoop() {
-	defer close(actor.ChanToReceiveData)
+	defer close(actor.ActorProps.ChanToReceiveData)
 	for {
-		action := actor.processReceivedMessage(<-actor.ChanToReceiveData)
+		action := actor.processReceivedMessage(<-actor.ActorProps.ChanToReceiveData)
 		actionsLog(action)
 	}
 }
 
 func (actor *Actor) SendMessage(data string) {
-	actor.ChanToReceiveData <- data
+	actor.ActorProps.ChanToReceiveData <- data
 }
 
 func actionsLog(action interface{}) {

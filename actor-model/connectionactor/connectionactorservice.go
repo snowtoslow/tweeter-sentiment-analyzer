@@ -2,20 +2,24 @@ package connectionactor
 
 import (
 	"bufio"
-	"log"
 	"net/http"
-	"regexp"
+	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 	"tweeter-sentiment-analyzer/actor-model/actorregistry"
+	"tweeter-sentiment-analyzer/actor-model/autoscaleractor"
+	"tweeter-sentiment-analyzer/actor-model/routeractor"
 	"tweeter-sentiment-analyzer/constants"
 	"tweeter-sentiment-analyzer/utils"
 )
 
-func NewConnectionActor(actorName string) *ConnectionActor {
+func NewConnectionActor(actorName string, routes []string) *ConnectionActor {
 	chanToSendData := make(chan string, constants.GlobalChanSize)
 
 	connectionMaker := &ConnectionActor{
-		Identity:       actorName + constants.ActorName,
-		ChanToSendData: chanToSendData,
+		ActorProps: actorabstraction.AbstractActor{
+			Identity:          actorName + constants.ActorName,
+			ChanToReceiveData: chanToSendData,
+		},
+		Routes: routes,
 	}
 
 	(*actorregistry.MyActorRegistry)["connectionActor"] = connectionMaker
@@ -26,10 +30,15 @@ func NewConnectionActor(actorName string) *ConnectionActor {
 	return connectionMaker
 }
 
-func (connectionMaker *ConnectionActor) SendDataToMultipleActorsOverChan(routes []string, cs ...chan string) {
-	for msg := range connectionMaker.receivePreparedData(routes) {
+func (connectionMaker *ConnectionActor) ActorLoop() {
+	cs := []chan string{
+		actorregistry.MyActorRegistry.TestFindActorByName("routerActor").(*routeractor.RouterActor).ActorProps.ChanToReceiveData,
+		actorregistry.MyActorRegistry.TestFindActorByName("autoscalingActor").(*autoscaleractor.AutoscalingActor).ActorProps.ChanToReceiveData,
+	}
+	for msg := range connectionMaker.receivePreparedData(connectionMaker.Routes) {
 		for _, v := range cs {
-			v <- connectionMaker.createMessage(msg)
+			connectionMaker.SendMessage(msg)
+			v <- connectionMaker.getChan()
 		}
 	}
 }
@@ -71,22 +80,23 @@ func (connectionMaker *ConnectionActor) makeReqPipeline(url string) chan string 
 	return dataFlowChan
 }
 
-func (connectionMaker *ConnectionActor) createMessage(data string) string {
-	connectionMaker.ChanToSendData <- data
-	return <-connectionMaker.ChanToSendData
+func (connectionMaker *ConnectionActor) getChan() string {
+	// connectionMaker.ActorProps.ChanToReceiveData <- data
+	return <-connectionMaker.ActorProps.ChanToReceiveData
 }
 
 func (connectionMaker *ConnectionActor) SendMessage(data string) {
-	connectionMaker.ChanToSendData <- data
+	connectionMaker.ActorProps.ChanToReceiveData <- data
 }
 
-func (connectionMaker *ConnectionActor) ActorLoop() {
-	defer close(connectionMaker.ChanToSendData)
+/*func (connectionMaker *ConnectionActor) ActorLoop() {
+	defer close(connectionMaker.ActorProps.ChanToReceiveData)
 	regexData := regexp.MustCompile(constants.JsonRegex)
 	for {
-		receivedString := regexData.FindString(<-connectionMaker.ChanToSendData)
+		receivedString := regexData.FindString(<-connectionMaker.ActorProps.ChanToReceiveData)
 		if receivedString == constants.PanicMessage {
 			log.Println("ERROR!")
 		}
+		log.Println(<-connectionMaker.ActorProps.ChanToReceiveData)
 	}
-}
+}*/

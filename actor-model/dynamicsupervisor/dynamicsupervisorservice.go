@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 	"tweeter-sentiment-analyzer/actor-model/actorregistry"
 	"tweeter-sentiment-analyzer/actor-model/workeractor"
 	"tweeter-sentiment-analyzer/constants"
@@ -11,9 +12,13 @@ import (
 
 func NewDynamicSupervisor(actorName string) *DynamicSupervisor {
 	chanToReceiveAmountOfActorsToCreate := make(chan int, constants.GlobalChanSize)
+	chanRoReceiveErrors := make(chan string, constants.GlobalChanSize)
 
 	dynamicSupervisor := &DynamicSupervisor{
-		Identity:                            actorName + constants.ActorName,
+		ActorProps: actorabstraction.AbstractActor{
+			Identity:          actorName + constants.ActorName,
+			ChanToReceiveData: chanRoReceiveErrors,
+		},
 		ChanToReceiveNumberOfActorsToCreate: chanToReceiveAmountOfActorsToCreate,
 	}
 
@@ -40,14 +45,19 @@ func (dynamicSupervisor *DynamicSupervisor) CreateActorPoll(numberOfActors int) 
 func (dynamicSupervisor *DynamicSupervisor) ActorLoop() {
 	defer close(dynamicSupervisor.ChanToReceiveNumberOfActorsToCreate)
 	for {
-		actorNumber := <-dynamicSupervisor.ChanToReceiveNumberOfActorsToCreate
-		if actorNumber == 0 {
-			log.Println("SKIP")
-			continue
-		} else if actorNumber < 0 {
-			dynamicSupervisor.deleteActors()
-		} else {
-			dynamicSupervisor.addActors()
+		select {
+		case <-dynamicSupervisor.ChanToReceiveNumberOfActorsToCreate:
+			actorNumber := <-dynamicSupervisor.ChanToReceiveNumberOfActorsToCreate
+			if actorNumber == 0 {
+				log.Println("SKIP")
+				continue
+			} else if actorNumber < 0 {
+				dynamicSupervisor.deleteActors()
+			} else {
+				dynamicSupervisor.addActors()
+			}
+		case <-dynamicSupervisor.ActorProps.ChanToReceiveData:
+			log.Println("ERROR")
 		}
 	}
 }

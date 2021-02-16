@@ -10,18 +10,20 @@ import (
 func RunApp(arr []string) error {
 	dynamicSupervisor := dynamicsupervisor.NewDynamicSupervisor("dynamic_supervisor")
 	//my connection workeractor
-	connectionMaker := connectionactor.NewConnectionActor("connection")
+	connectionMaker := connectionactor.NewConnectionActor("connection", arr)
 
 	if err := dynamicSupervisor.CreateActorPoll(5); err != nil {
 		return err
 	}
 
 	//my router workeractor
-	routerActor := routeractor.NewRouterActor("router")
+	_ = routeractor.NewRouterActor("router")
 
-	autoscalingActor := autoscaleractor.NewAutoscalingActor("autoscaling")
+	_ = autoscaleractor.NewAutoscalingActor("autoscaling")
 
-	connectionMaker.SendDataToMultipleActorsOverChan(arr, routerActor.ChanToRecvMsg, autoscalingActor.ChanToReceiveMessagesForCount)
+	//log.Println(connectionMaker,routerActor,autoscalingActor)
+
+	connectionMaker.ActorLoop()
 
 	return nil
 }

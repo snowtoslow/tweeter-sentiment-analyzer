@@ -4,7 +4,7 @@ import (
 	"sync"
 )
 
-//cesto spizdil from https://blog.golang.org/pipelines because I'm pull stack developer
+//cestno spizdil from https://blog.golang.org/pipelines because I'm pull stack developer
 func MergeWait(cs ...chan string) chan string {
 	out := make(chan string)
 	var wg sync.WaitGroup

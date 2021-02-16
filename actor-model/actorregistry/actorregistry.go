@@ -18,6 +18,7 @@ func (registry ActorRegistry) TestFindActorByName(name string) interface{} {
 			log.Println("actors pool:", res)
 			return res
 		}*/
+		//fmt.Printf("%T",x)
 		return x
 	}
 	return fmt.Errorf("actor type not found")

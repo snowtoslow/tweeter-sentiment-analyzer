@@ -1,6 +1,7 @@
 package routeractor
 
 import (
+	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 	"tweeter-sentiment-analyzer/actor-model/actorregistry"
 	"tweeter-sentiment-analyzer/actor-model/workeractor"
 	"tweeter-sentiment-analyzer/constants"
@@ -10,28 +11,30 @@ func NewRouterActor(actorName string) *RouterActor {
 	chanToRecvMsg := make(chan string, constants.GlobalChanSize)
 
 	routerActor := &RouterActor{
-		Identity:          actorName + constants.ActorName,
-		ChanToRecvMsg:     chanToRecvMsg,
+		ActorProps: actorabstraction.AbstractActor{
+			Identity:          actorName + constants.ActorName,
+			ChanToReceiveData: chanToRecvMsg,
+		},
 		CurrentActorIndex: 0,
 	}
 
-	(*actorregistry.MyActorRegistry)["routerActor"] = routerActor
+	go routerActor.ActorLoop()
 
-	go routerActor.ActorLoop() //workeractor loop for balancing;
+	(*actorregistry.MyActorRegistry)["routerActor"] = routerActor
 
 	return routerActor
 }
 
 func (routerActor *RouterActor) SendMessage(data string) {
-	routerActor.ChanToRecvMsg <- data
+	routerActor.ActorProps.ChanToReceiveData <- data
 }
 
 func (routerActor *RouterActor) ActorLoop() {
-	defer close(routerActor.ChanToRecvMsg)
+	defer close(routerActor.ActorProps.ChanToReceiveData)
 	actors := actorregistry.MyActorRegistry.TestFindActorByName("actorPool").([]workeractor.Actor)
 	for {
 		select {
-		case output := <-routerActor.ChanToRecvMsg:
+		case output := <-routerActor.ActorProps.ChanToReceiveData:
 			if routerActor.CurrentActorIndex >= len(actors) {
 				routerActor.CurrentActorIndex = 0
 			}
