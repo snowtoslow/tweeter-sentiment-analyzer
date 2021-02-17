@@ -10,8 +10,8 @@ import (
 	"tweeter-sentiment-analyzer/utils"
 )
 
-func NewAutoscalingActor(actorName string) *AutoscalingActor {
-	chanForMessages := make(chan string, constants.GlobalChanSize)
+func NewAutoscalingActor(actorName string) actorabstraction.IActor {
+	chanForMessages := make(chan interface{}, constants.GlobalChanSize)
 
 	autoscalingActor := &AutoscalingActor{
 		ActorProps: actorabstraction.AbstractActor{
@@ -38,7 +38,7 @@ func (autoscalingActor *AutoscalingActor) ActorLoop() {
 	for {
 		select {
 		case msg := <-autoscalingActor.ActorProps.ChanToReceiveData:
-			action := regexp.MustCompile(constants.JsonRegex).FindString(msg)
+			action := regexp.MustCompile(constants.JsonRegex).FindString(msg.(string))
 			if len(action) != 0 {
 				counter++
 			}
@@ -57,6 +57,6 @@ func (autoscalingActor *AutoscalingActor) ActorLoop() {
 	}
 }
 
-func (autoscalingActor *AutoscalingActor) SendMessage(msg int) {
-	actorregistry.MyActorRegistry.TestFindActorByName("dynamicSupervisor").(*dynamicsupervisor.DynamicSupervisor).ChanToReceiveNumberOfActorsToCreate <- msg
+func (autoscalingActor *AutoscalingActor) SendMessage(msg interface{}) {
+	actorregistry.MyActorRegistry.TestFindActorByName("dynamicSupervisor").(*dynamicsupervisor.DynamicSupervisor).ChanToReceiveNumberOfActorsToCreate <- msg.(int)
 }

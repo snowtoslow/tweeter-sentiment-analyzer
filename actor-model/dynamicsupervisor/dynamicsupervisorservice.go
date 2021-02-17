@@ -10,9 +10,9 @@ import (
 	"tweeter-sentiment-analyzer/constants"
 )
 
-func NewDynamicSupervisor(actorName string) *DynamicSupervisor {
+func NewDynamicSupervisor(actorName string) actorabstraction.IActor {
 	chanToReceiveAmountOfActorsToCreate := make(chan int, constants.GlobalChanSize)
-	chanRoReceiveErrors := make(chan string, constants.GlobalChanSize)
+	chanRoReceiveErrors := make(chan interface{}, constants.GlobalChanSize)
 
 	dynamicSupervisor := &DynamicSupervisor{
 		ActorProps: actorabstraction.AbstractActor{
@@ -20,6 +20,10 @@ func NewDynamicSupervisor(actorName string) *DynamicSupervisor {
 			ChanToReceiveData: chanRoReceiveErrors,
 		},
 		ChanToReceiveNumberOfActorsToCreate: chanToReceiveAmountOfActorsToCreate,
+	}
+
+	if err := dynamicSupervisor.CreateActorPoll(5); err != nil {
+		log.Println("ERROR IN DYNAMIC SUPERVISOR HERE!", err)
 	}
 
 	(*actorregistry.MyActorRegistry)["dynamicSupervisor"] = dynamicSupervisor
@@ -30,12 +34,12 @@ func NewDynamicSupervisor(actorName string) *DynamicSupervisor {
 }
 
 func (dynamicSupervisor *DynamicSupervisor) CreateActorPoll(numberOfActors int) (err error) {
-	actorPoll := new([]workeractor.Actor)
+	actorPoll := new([]actorabstraction.IActor)
 	if numberOfActors <= 1 {
 		return fmt.Errorf("number of actors could not be smaller or equal with one")
 	}
 	for i := 0; i < numberOfActors; i++ {
-		*actorPoll = append(*actorPoll, *workeractor.NewActor("working_" + strconv.Itoa(i)))
+		*actorPoll = append(*actorPoll, workeractor.NewActor("working_"+strconv.Itoa(i)))
 	}
 	(*actorregistry.MyActorRegistry)["actorPool"] = *actorPoll
 

@@ -6,7 +6,6 @@ type IActor interface {
 }
 
 type AbstractActor struct {
-	IActor
 	Identity          string
-	ChanToReceiveData chan string
+	ChanToReceiveData chan interface{}
 }

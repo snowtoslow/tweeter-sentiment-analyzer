@@ -11,8 +11,8 @@ import (
 	"tweeter-sentiment-analyzer/utils"
 )
 
-func NewConnectionActor(actorName string, routes []string) *ConnectionActor {
-	chanToSendData := make(chan string, constants.GlobalChanSize)
+func NewConnectionActor(actorName string, routes []string) actorabstraction.IActor {
+	chanToSendData := make(chan interface{}, constants.GlobalChanSize)
 
 	connectionMaker := &ConnectionActor{
 		ActorProps: actorabstraction.AbstractActor{
@@ -24,14 +24,14 @@ func NewConnectionActor(actorName string, routes []string) *ConnectionActor {
 
 	(*actorregistry.MyActorRegistry)["connectionActor"] = connectionMaker
 
-	//go connectionMaker.ActorLoop()
+	//go connectionMaker.ActorProps.ActorLoop()
 	//we can uncomment it but the could ud become more harder wo change because we need the ability to send to a new chan
 
 	return connectionMaker
 }
 
 func (connectionMaker *ConnectionActor) ActorLoop() {
-	cs := []chan string{
+	cs := []chan interface{}{
 		actorregistry.MyActorRegistry.TestFindActorByName("routerActor").(*routeractor.RouterActor).ActorProps.ChanToReceiveData,
 		actorregistry.MyActorRegistry.TestFindActorByName("autoscalingActor").(*autoscaleractor.AutoscalingActor).ActorProps.ChanToReceiveData,
 	}
@@ -80,12 +80,12 @@ func (connectionMaker *ConnectionActor) makeReqPipeline(url string) chan string 
 	return dataFlowChan
 }
 
-func (connectionMaker *ConnectionActor) getChan() string {
+func (connectionMaker *ConnectionActor) getChan() interface{} {
 	// connectionMaker.ActorProps.ChanToReceiveData <- data
 	return <-connectionMaker.ActorProps.ChanToReceiveData
 }
 
-func (connectionMaker *ConnectionActor) SendMessage(data string) {
+func (connectionMaker *ConnectionActor) SendMessage(data interface{}) {
 	connectionMaker.ActorProps.ChanToReceiveData <- data
 }
 

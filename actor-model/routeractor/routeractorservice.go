@@ -3,12 +3,11 @@ package routeractor
 import (
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 	"tweeter-sentiment-analyzer/actor-model/actorregistry"
-	"tweeter-sentiment-analyzer/actor-model/workeractor"
 	"tweeter-sentiment-analyzer/constants"
 )
 
-func NewRouterActor(actorName string) *RouterActor {
-	chanToRecvMsg := make(chan string, constants.GlobalChanSize)
+func NewRouterActor(actorName string) actorabstraction.IActor {
+	chanToRecvMsg := make(chan interface{}, constants.GlobalChanSize)
 
 	routerActor := &RouterActor{
 		ActorProps: actorabstraction.AbstractActor{
@@ -25,13 +24,13 @@ func NewRouterActor(actorName string) *RouterActor {
 	return routerActor
 }
 
-func (routerActor *RouterActor) SendMessage(data string) {
+func (routerActor *RouterActor) SendMessage(data interface{}) {
 	routerActor.ActorProps.ChanToReceiveData <- data
 }
 
 func (routerActor *RouterActor) ActorLoop() {
 	defer close(routerActor.ActorProps.ChanToReceiveData)
-	actors := actorregistry.MyActorRegistry.TestFindActorByName("actorPool").([]workeractor.Actor)
+	actors := actorregistry.MyActorRegistry.TestFindActorByName("actorPool").([]actorabstraction.IActor)
 	for {
 		select {
 		case output := <-routerActor.ActorProps.ChanToReceiveData:

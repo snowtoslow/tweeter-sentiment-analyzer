@@ -8,13 +8,9 @@ import (
 )
 
 func RunApp(arr []string) error {
-	dynamicSupervisor := dynamicsupervisor.NewDynamicSupervisor("dynamic_supervisor")
+	_ = dynamicsupervisor.NewDynamicSupervisor("dynamic_supervisor")
 	//my connection workeractor
 	connectionMaker := connectionactor.NewConnectionActor("connection", arr)
-
-	if err := dynamicSupervisor.CreateActorPoll(5); err != nil {
-		return err
-	}
 
 	//my router workeractor
 	_ = routeractor.NewRouterActor("router")

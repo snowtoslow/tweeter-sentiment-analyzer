@@ -9,19 +9,8 @@ import (
 	"tweeter-sentiment-analyzer/utils"
 )
 
-/*func NewActor(actorName string) *ActorProps {
-	chanToRecv := make(chan string, constants.GlobalChanSize)
-	actor := &ActorProps{
-		Identity:          actorName + constants.ActorName,
-		ChanToReceiveData: chanToRecv,
-	}
-
-	go actor.ActorLoop()
-	return actor
-}*/
-
-func NewActor(actorName string) *Actor {
-	chanToRecv := make(chan string, constants.GlobalChanSize)
+func NewActor(actorName string) actorabstraction.IActor {
+	chanToRecv := make(chan interface{}, constants.GlobalChanSize)
 	actor := &Actor{
 		ActorProps: actorabstraction.AbstractActor{
 			Identity:          actorName + constants.ActorName,
@@ -42,7 +31,7 @@ func (actor *Actor) ActorLoop() {
 	}
 }
 
-func (actor *Actor) SendMessage(data string) {
+func (actor *Actor) SendMessage(data interface{}) {
 	actor.ActorProps.ChanToReceiveData <- data
 }
 
@@ -56,9 +45,9 @@ func actionsLog(action interface{}) {
 	}
 }
 
-func (actor *Actor) processReceivedMessage(dataToRecv string) (resultDataStructure interface{}) {
+func (actor *Actor) processReceivedMessage(dataToRecv interface{}) (resultDataStructure interface{}) {
 	regexData := regexp.MustCompile(constants.JsonRegex)
-	if receivedString := regexData.FindString(dataToRecv); len(receivedString) != 0 {
+	if receivedString := regexData.FindString(dataToRecv.(string)); len(receivedString) != 0 {
 		// be carefully with error from json CreateMessageType
 		resultDataStructure = utils.CreateMessageType(receivedString)
 	}
