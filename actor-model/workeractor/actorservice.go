@@ -27,7 +27,14 @@ func (actor *Actor) ActorLoop() {
 	defer close(actor.ActorProps.ChanToReceiveData)
 	for {
 		action := actor.processReceivedMessage(<-actor.ActorProps.ChanToReceiveData)
-		actionsLog(action)
+		if fmt.Sprintf("%T", action) == constants.JsonNameOfStruct {
+			//log.Println("Stuff to count:")
+		} else if fmt.Sprintf("%T", action) == constants.PanicMessageType {
+			log.Println("ERROR:", actor.ActorProps.Identity)
+		} else {
+			//log.Printf("Nil is received!")
+		}
+		//actionsLog(action)
 	}
 }
 

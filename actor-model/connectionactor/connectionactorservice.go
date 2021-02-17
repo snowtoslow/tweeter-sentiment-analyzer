@@ -31,14 +31,15 @@ func NewConnectionActor(actorName string, routes []string) actorabstraction.IAct
 }
 
 func (connectionMaker *ConnectionActor) ActorLoop() {
-	cs := []chan interface{}{
-		actorregistry.MyActorRegistry.TestFindActorByName("routerActor").(*routeractor.RouterActor).ActorProps.ChanToReceiveData,
-		actorregistry.MyActorRegistry.TestFindActorByName("autoscalingActor").(*autoscaleractor.AutoscalingActor).ActorProps.ChanToReceiveData,
+	cs := []actorabstraction.IActor{
+		actorregistry.MyActorRegistry.FindActorByName("routerActor").(*routeractor.RouterActor),
+		actorregistry.MyActorRegistry.FindActorByName("autoscalingActor").(*autoscaleractor.AutoscalingActor),
 	}
 	for msg := range connectionMaker.receivePreparedData(connectionMaker.Routes) {
 		for _, v := range cs {
-			connectionMaker.SendMessage(msg)
-			v <- connectionMaker.getChan()
+			v.SendMessage(msg)
+			/*connectionMaker.SendMessage(msg)
+			v <- connectionMaker.getChan()*/
 		}
 	}
 }
@@ -78,11 +79,6 @@ func (connectionMaker *ConnectionActor) makeReqPipeline(url string) chan string 
 		close(dataFlowChan)
 	}()
 	return dataFlowChan
-}
-
-func (connectionMaker *ConnectionActor) getChan() interface{} {
-	// connectionMaker.ActorProps.ChanToReceiveData <- data
-	return <-connectionMaker.ActorProps.ChanToReceiveData
 }
 
 func (connectionMaker *ConnectionActor) SendMessage(data interface{}) {

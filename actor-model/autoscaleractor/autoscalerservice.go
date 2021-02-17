@@ -49,8 +49,8 @@ func (autoscalingActor *AutoscalingActor) ActorLoop() {
 			movingAvg = int(utils.MovingExpAvg(float64(counter), float64(prevCounter), 1, 2)) / 15
 			prevCounter = counter
 			counter = 0
-			//log.Println("HERE:",actorregistry.MyActorRegistry.TestFindActorByName("dynamic_supervisor"))
-			autoscalingActor.SendMessage(movingAvg - prevMovingAvg)
+			//log.Println("HERE:",actorregistry.MyActorRegistry.FindActorByName("dynamic_supervisor"))
+			autoscalingActor.sendMessageToSupervisor(movingAvg - prevMovingAvg)
 			//log.Println("prev mov avg:",prevMovingAvg)
 			//log.Println("moving avg:",movingAvg)
 		}
@@ -58,5 +58,9 @@ func (autoscalingActor *AutoscalingActor) ActorLoop() {
 }
 
 func (autoscalingActor *AutoscalingActor) SendMessage(msg interface{}) {
-	actorregistry.MyActorRegistry.TestFindActorByName("dynamicSupervisor").(*dynamicsupervisor.DynamicSupervisor).ChanToReceiveNumberOfActorsToCreate <- msg.(int)
+	autoscalingActor.ActorProps.ChanToReceiveData <- msg
+}
+
+func (autoscalingActor *AutoscalingActor) sendMessageToSupervisor(msg interface{}) {
+	actorregistry.MyActorRegistry.FindActorByName("dynamicSupervisor").(*dynamicsupervisor.DynamicSupervisor).SendMessage(msg)
 }

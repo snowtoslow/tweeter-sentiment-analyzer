@@ -30,14 +30,13 @@ func (routerActor *RouterActor) SendMessage(data interface{}) {
 
 func (routerActor *RouterActor) ActorLoop() {
 	defer close(routerActor.ActorProps.ChanToReceiveData)
-	actors := actorregistry.MyActorRegistry.TestFindActorByName("actorPool").([]actorabstraction.IActor)
 	for {
 		select {
 		case output := <-routerActor.ActorProps.ChanToReceiveData:
-			if routerActor.CurrentActorIndex >= len(actors) {
+			if routerActor.CurrentActorIndex >= len(*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor)) {
 				routerActor.CurrentActorIndex = 0
 			}
-			(actors)[routerActor.CurrentActorIndex].SendMessage(output) // change here from routerActor.Actors[routerActor.CurrentActorIndex].ChanToReceiveData <- output
+			(*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor))[routerActor.CurrentActorIndex].SendMessage(output) // change here from routerActor.Actors[routerActor.CurrentActorIndex].ChanToReceiveData <- output
 			routerActor.CurrentActorIndex++
 		}
 	}

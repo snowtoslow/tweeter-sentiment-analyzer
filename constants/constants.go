@@ -9,4 +9,5 @@ var (
 	ActorName              = "_actor"
 	GlobalChanSize         = 10
 	PointerJsonSyntaxError = "*json.SyntaxError"
+	DefaultActorPollSize   = 5
 )

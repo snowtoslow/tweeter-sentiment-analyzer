@@ -8,7 +8,10 @@ import (
 )
 
 func RunApp(arr []string) error {
-	_ = dynamicsupervisor.NewDynamicSupervisor("dynamic_supervisor")
+
+	if _, err := dynamicsupervisor.NewDynamicSupervisor("dynamic_supervisor"); err != nil {
+		return err
+	}
 	//my connection workeractor
 	connectionMaker := connectionactor.NewConnectionActor("connection", arr)
 
