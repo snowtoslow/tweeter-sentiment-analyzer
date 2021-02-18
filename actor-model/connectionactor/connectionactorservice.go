@@ -37,7 +37,9 @@ func (connectionMaker *ConnectionActor) ActorLoop() {
 	}
 	for msg := range connectionMaker.receivePreparedData(connectionMaker.Routes) {
 		for _, v := range cs {
-			v.SendMessage(msg)
+			if len(msg) != 0 {
+				v.SendMessage(msg)
+			}
 			/*connectionMaker.SendMessage(msg)
 			v <- connectionMaker.getChan()*/
 		}

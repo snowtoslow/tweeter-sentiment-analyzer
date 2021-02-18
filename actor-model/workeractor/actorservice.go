@@ -5,7 +5,6 @@ import (
 	"log"
 	"regexp"
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
-	"tweeter-sentiment-analyzer/actor-model/actorregistry"
 	message_types "tweeter-sentiment-analyzer/actor-model/message-types"
 	"tweeter-sentiment-analyzer/constants"
 	"tweeter-sentiment-analyzer/utils"
@@ -33,7 +32,7 @@ func (actor *Actor) ActorLoop() {
 		if fmt.Sprintf("%T", action) == constants.JsonNameOfStruct {
 			//log.Println("Stuff to count:")
 		} else if fmt.Sprintf("%T", action) == constants.PanicMessageType {
-			log.Println("ERROR:", actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor))
+			log.Println("ERROR:")
 			errMsg := message_types.ErrorToSupervisor{
 				ActorIdentity: actor.ActorProps.Identity,
 				Message:       message_types.PanicMessage("error occurred in worker actor with identity " + actor.ActorProps.Identity),

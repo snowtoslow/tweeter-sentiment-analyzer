@@ -1,6 +1,7 @@
 package routeractor
 
 import (
+	"log"
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 	"tweeter-sentiment-analyzer/actor-model/actorregistry"
 	"tweeter-sentiment-analyzer/constants"
@@ -25,6 +26,11 @@ func NewRouterActor(actorName string) actorabstraction.IActor {
 }
 
 func (routerActor *RouterActor) SendMessage(data interface{}) {
+	routerActor.ActorProps.ChanToReceiveData <- data
+}
+
+func (routerActor *RouterActor) ReceiveMessageFromSupervisor(data interface{}) {
+	log.Println("RECEIVE DATA FROM SUPERVISOR:")
 	routerActor.ActorProps.ChanToReceiveData <- data
 }
 

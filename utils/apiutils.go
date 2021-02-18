@@ -2,9 +2,12 @@ package utils
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
+	"tweeter-sentiment-analyzer/actor-model/actorregistry"
 	"tweeter-sentiment-analyzer/models"
 )
 
@@ -27,4 +30,10 @@ func GetRoutes(address string) (mainRoutes *models.MainRouteMsg, err error) {
 	}
 
 	return
+}
+
+func logger() {
+	for _, p := range *actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor) {
+		fmt.Printf("%+v\n", p)
+	}
 }

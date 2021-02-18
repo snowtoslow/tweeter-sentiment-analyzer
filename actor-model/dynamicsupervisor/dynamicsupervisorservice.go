@@ -7,8 +7,10 @@ import (
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 	"tweeter-sentiment-analyzer/actor-model/actorregistry"
 	message_types "tweeter-sentiment-analyzer/actor-model/message-types"
+	"tweeter-sentiment-analyzer/actor-model/routeractor"
 	"tweeter-sentiment-analyzer/actor-model/workeractor"
 	"tweeter-sentiment-analyzer/constants"
+	"tweeter-sentiment-analyzer/utils"
 )
 
 func NewDynamicSupervisor(actorName string) (actorabstraction.IActor, error) {
@@ -52,20 +54,18 @@ func (dynamicSupervisor *DynamicSupervisor) ActorLoop() {
 	for {
 		select {
 		case <-dynamicSupervisor.ChanToReceiveNumberOfActorsToCreate:
-			log.Println("NUMBER!")
 			actorNumber := <-dynamicSupervisor.ChanToReceiveNumberOfActorsToCreate
 			if actorNumber == 0 {
-				log.Println("SKIP")
 				continue
 			} else if actorNumber < 0 {
-				log.Println("delete", actorNumber)
 				dynamicSupervisor.deleteActors(actorNumber)
 			} else {
 				dynamicSupervisor.addActors(actorNumber)
 			}
 		case action := <-dynamicSupervisor.ActorProps.ChanToReceiveData:
-			dynamicSupervisor.deleteActorByIdentity(action.(message_types.ErrorToSupervisor).ActorIdentity)
-			dynamicSupervisor.recreateWorkingActor(action.(message_types.ErrorToSupervisor).ActorIdentity)
+			//dynamicSupervisor.deleteActorByIdentity(action.(message_types.ErrorToSupervisor).ActorIdentity)
+			/*dynamicSupervisor.recreateWorkingActor(action.(message_types.ErrorToSupervisor).ActorIdentity)*/
+			dynamicSupervisor.deleteActorAndRecreateByIdentity(action.(message_types.ErrorToSupervisor).ActorIdentity)
 		}
 	}
 }
@@ -87,6 +87,7 @@ func (dynamicSupervisor *DynamicSupervisor) addActors(numberOfActors int) {
 }
 
 func (dynamicSupervisor *DynamicSupervisor) deleteActors(numberOfActors int) {
+	dynamicSupervisor.sendToRouter(dynamicSupervisor.collectDataOfActorsToBeDroppedToSingleChan(-numberOfActors))
 	for i := 0; i < -numberOfActors; i++ {
 		*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor) =
 			append((*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor))[:i],
@@ -94,20 +95,43 @@ func (dynamicSupervisor *DynamicSupervisor) deleteActors(numberOfActors int) {
 	}
 }
 
-func (dynamicSupervisor *DynamicSupervisor) deleteActorByIdentity(actorIdentity string) {
+//log.Printf("idetity: %s--->%s",(*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor))[i].(*workeractor.Actor).ActorProps.Identity,a.(string))
+func (dynamicSupervisor *DynamicSupervisor) deleteActorAndRecreateByIdentity(actorIdentity string) {
 	log.Println("Delete actor by identity:", actorIdentity)
 	for i := 0; i < len(*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor)); i++ {
 		if (*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor))[i].(*workeractor.Actor).ActorProps.Identity == actorIdentity {
+			recreatedActor := workeractor.NewActor(actorIdentity, dynamicSupervisor)
+			a := <-(*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor))[i].(*workeractor.Actor).ActorProps.ChanToReceiveData
+			recreatedActor.(*workeractor.Actor).SendMessage(a)
 			*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor) =
 				append((*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor))[:i],
 					(*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor))[i+1:]...)
+			dynamicSupervisor.pushRecreatedWorkingActorToArray(recreatedActor.(*workeractor.Actor))
+			break //maybe necessary to delete!
 		}
 	}
 }
 
-func (dynamicSupervisor *DynamicSupervisor) recreateWorkingActor(actorName string) {
-	log.Println("recreate working actor with identity:", actorName)
+func (dynamicSupervisor *DynamicSupervisor) pushRecreatedWorkingActorToArray(recreatedActor *workeractor.Actor) {
+	log.Println("recreate actor with identity:", recreatedActor.ActorProps.Identity)
 	*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor) =
 		append(*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor),
-			workeractor.NewActor(actorName, dynamicSupervisor))
+			recreatedActor)
+}
+
+func (dynamicSupervisor *DynamicSupervisor) sendToRouter(myChan chan interface{}) {
+	go func() {
+		for msg := range myChan {
+			actorregistry.MyActorRegistry.FindActorByName("routerActor").(*routeractor.RouterActor).SendMessage(msg)
+		}
+	}()
+}
+
+func (dynamicSupervisor *DynamicSupervisor) collectDataOfActorsToBeDroppedToSingleChan(numberOfActors int) chan interface{} {
+	var actorsChanToDelete []chan interface{}
+	for i := 0; i < numberOfActors; i++ {
+		actorsChanToDelete = append(actorsChanToDelete,
+			(*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor))[i].(*workeractor.Actor).ActorProps.ChanToReceiveData)
+	}
+	return utils.MergeWaitInterface(actorsChanToDelete)
 }
