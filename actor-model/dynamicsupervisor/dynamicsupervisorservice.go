@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 	"tweeter-sentiment-analyzer/actor-model/actorregistry"
+	message_types "tweeter-sentiment-analyzer/actor-model/message-types"
 	"tweeter-sentiment-analyzer/actor-model/workeractor"
 	"tweeter-sentiment-analyzer/constants"
 )
@@ -39,7 +40,7 @@ func (dynamicSupervisor *DynamicSupervisor) CreateActorPoll(numberOfActors int) 
 		return fmt.Errorf("number of actors could not be smaller or equal with one")
 	}
 	for i := 0; i < numberOfActors; i++ {
-		actorPoll = append(actorPoll, workeractor.NewActor("working_"+strconv.Itoa(i)))
+		actorPoll = append(actorPoll, workeractor.NewActor("working"+constants.ActorName+strconv.Itoa(i), dynamicSupervisor))
 	}
 	(*actorregistry.MyActorRegistry)["actorPool"] = &actorPoll
 
@@ -51,17 +52,20 @@ func (dynamicSupervisor *DynamicSupervisor) ActorLoop() {
 	for {
 		select {
 		case <-dynamicSupervisor.ChanToReceiveNumberOfActorsToCreate:
+			log.Println("NUMBER!")
 			actorNumber := <-dynamicSupervisor.ChanToReceiveNumberOfActorsToCreate
 			if actorNumber == 0 {
 				log.Println("SKIP")
 				continue
 			} else if actorNumber < 0 {
+				log.Println("delete", actorNumber)
 				dynamicSupervisor.deleteActors(actorNumber)
 			} else {
 				dynamicSupervisor.addActors(actorNumber)
 			}
-		case <-dynamicSupervisor.ActorProps.ChanToReceiveData:
-			log.Println("ERROR")
+		case action := <-dynamicSupervisor.ActorProps.ChanToReceiveData:
+			dynamicSupervisor.deleteActorByIdentity(action.(message_types.ErrorToSupervisor).ActorIdentity)
+			dynamicSupervisor.recreateWorkingActor(action.(message_types.ErrorToSupervisor).ActorIdentity)
 		}
 	}
 }
@@ -70,20 +74,40 @@ func (dynamicSupervisor *DynamicSupervisor) SendMessage(msg interface{}) {
 	dynamicSupervisor.ChanToReceiveNumberOfActorsToCreate <- msg.(int)
 }
 
+func (dynamicSupervisor *DynamicSupervisor) SendErrMessage(msg interface{}) {
+	dynamicSupervisor.ActorProps.ChanToReceiveData <- msg
+}
+
 func (dynamicSupervisor *DynamicSupervisor) addActors(numberOfActors int) {
-	log.Println("Add actors", numberOfActors)
 	for i := 0; i < numberOfActors; i++ {
 		*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor) =
 			append(*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor),
-				workeractor.NewActor("working_"+strconv.Itoa(i+5)))
+				workeractor.NewActor("working"+constants.ActorName+strconv.Itoa(i+5), dynamicSupervisor))
 	}
 }
 
 func (dynamicSupervisor *DynamicSupervisor) deleteActors(numberOfActors int) {
-	log.Println("Delete actors", numberOfActors)
 	for i := 0; i < -numberOfActors; i++ {
 		*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor) =
 			append((*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor))[:i],
 				(*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor))[i+1:]...)
 	}
+}
+
+func (dynamicSupervisor *DynamicSupervisor) deleteActorByIdentity(actorIdentity string) {
+	log.Println("Delete actor by identity:", actorIdentity)
+	for i := 0; i < len(*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor)); i++ {
+		if (*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor))[i].(*workeractor.Actor).ActorProps.Identity == actorIdentity {
+			*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor) =
+				append((*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor))[:i],
+					(*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor))[i+1:]...)
+		}
+	}
+}
+
+func (dynamicSupervisor *DynamicSupervisor) recreateWorkingActor(actorName string) {
+	log.Println("recreate working actor with identity:", actorName)
+	*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor) =
+		append(*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor),
+			workeractor.NewActor(actorName, dynamicSupervisor))
 }

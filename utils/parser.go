@@ -3,14 +3,14 @@ package utils
 import (
 	"encoding/json"
 	"math"
-	msgType "tweeter-sentiment-analyzer/actor-model/message-types"
+	"tweeter-sentiment-analyzer/actor-model/message-types"
 	"tweeter-sentiment-analyzer/constants"
 	"tweeter-sentiment-analyzer/models"
 )
 
 func CreateMessageType(processedString string) interface{} {
 	if processedString == constants.PanicMessage {
-		return msgType.PanicMessage(processedString)
+		return message_types.PanicMessage(processedString)
 	} else {
 		var tweetMsg *models.MyJsonName
 		if err := json.Unmarshal([]byte(processedString), &tweetMsg); err != nil {

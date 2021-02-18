@@ -5,17 +5,20 @@ import (
 	"log"
 	"regexp"
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
+	"tweeter-sentiment-analyzer/actor-model/actorregistry"
+	message_types "tweeter-sentiment-analyzer/actor-model/message-types"
 	"tweeter-sentiment-analyzer/constants"
 	"tweeter-sentiment-analyzer/utils"
 )
 
-func NewActor(actorName string) actorabstraction.IActor {
+func NewActor(actorName string, dynamicSup IDynamicSupervisor) actorabstraction.IActor {
 	chanToRecv := make(chan interface{}, constants.GlobalChanSize)
 	actor := &Actor{
 		ActorProps: actorabstraction.AbstractActor{
-			Identity:          actorName + constants.ActorName,
+			Identity:          actorName,
 			ChanToReceiveData: chanToRecv,
 		},
+		DynamicSupervisorAvoidance: dynamicSup,
 	}
 
 	go actor.ActorLoop()
@@ -30,16 +33,24 @@ func (actor *Actor) ActorLoop() {
 		if fmt.Sprintf("%T", action) == constants.JsonNameOfStruct {
 			//log.Println("Stuff to count:")
 		} else if fmt.Sprintf("%T", action) == constants.PanicMessageType {
-			log.Println("ERROR:", actor.ActorProps.Identity)
+			log.Println("ERROR:", actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor))
+			errMsg := message_types.ErrorToSupervisor{
+				ActorIdentity: actor.ActorProps.Identity,
+				Message:       message_types.PanicMessage("error occurred in worker actor with identity " + actor.ActorProps.Identity),
+			}
+			actor.SendMessageToSupervisor(errMsg)
 		} else {
 			//log.Printf("Nil is received!")
 		}
-		//actionsLog(action)
 	}
 }
 
 func (actor *Actor) SendMessage(data interface{}) {
 	actor.ActorProps.ChanToReceiveData <- data
+}
+
+func (actor *Actor) SendMessageToSupervisor(msg interface{}) {
+	actor.DynamicSupervisorAvoidance.SendErrMessage(msg)
 }
 
 func actionsLog(action interface{}) {

@@ -4,8 +4,11 @@ import (
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 )
 
+type IDynamicSupervisor interface {
+	SendErrMessage(msg interface{})
+}
+
 type Actor struct {
-	/*Identity          string
-	ChanToReceiveData chan string*/
-	ActorProps actorabstraction.AbstractActor
+	DynamicSupervisorAvoidance IDynamicSupervisor
+	ActorProps                 actorabstraction.AbstractActor
 }
