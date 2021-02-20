@@ -31,7 +31,7 @@ func (actor *Actor) ActorLoop() {
 	for {
 		action := actor.processReceivedMessage(<-actor.ActorProps.ChanToReceiveData)
 		if fmt.Sprintf("%T", action) == constants.JsonNameOfStruct {
-			log.Println(utils.AnalyzeSentiments(action.(*models.MyJsonName).Message.Tweet.Text))
+			log.Printf("%s ----> %v\n", action.(*models.MyJsonName).Message.Tweet.Text, utils.AnalyzeSentiments(action.(*models.MyJsonName).Message.Tweet.Text))
 		} else if fmt.Sprintf("%T", action) == constants.PanicMessageType {
 			log.Println("ERROR:")
 			errMsg := message_types.ErrorToSupervisor{
