@@ -1,8 +1,7 @@
-package connectionactor
+package autoscaleractor
 
 import "tweeter-sentiment-analyzer/actor-model/actorabstraction"
 
-type ConnectionActor struct {
+type AutoscalingActor struct {
 	ActorProps actorabstraction.AbstractActor
-	Routes     []string
 }

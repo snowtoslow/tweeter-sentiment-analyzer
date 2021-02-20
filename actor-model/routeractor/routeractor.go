@@ -1,10 +1,16 @@
 package routeractor
 
-import "tweeter-sentiment-analyzer/actor-model/actor"
+import (
+	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
+)
 
-type RouterActor struct {
+/*type RouterActor struct {
 	Identity          string
 	ChanToRecvMsg     chan string
 	CurrentActorIndex int
-	Actors            []*actor.Actor
+}*/
+
+type RouterActor struct {
+	ActorProps        actorabstraction.AbstractActor
+	CurrentActorIndex int
 }

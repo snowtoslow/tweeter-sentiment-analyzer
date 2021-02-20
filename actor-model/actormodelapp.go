@@ -1,23 +1,28 @@
 package actor_model
 
 import (
+	"tweeter-sentiment-analyzer/actor-model/autoscaleractor"
 	"tweeter-sentiment-analyzer/actor-model/connectionactor"
-	"tweeter-sentiment-analyzer/constants"
+	"tweeter-sentiment-analyzer/actor-model/dynamicsupervisor"
+	"tweeter-sentiment-analyzer/actor-model/routeractor"
 )
 
-func RunApp(arr []string) {
+func RunApp(arr []string) error {
 
-	connectionMaker := connectionactor.NewConnectionActor("connection")
-
-	/*routerActor, err := routeractor.NewRouterActor("router", 5) // here is created router actor which is also a siple actor but which can route messages to actors from pool!
-	if err != nil {
-		log.Println(err)
-	}*/
-
-	for _, v := range arr[:2] {
-		go connectionMaker.MakeRequest(constants.EndPointToTrigger + v)
+	if _, err := dynamicsupervisor.NewDynamicSupervisor("dynamic_supervisor"); err != nil {
+		return err
 	}
+	//my connection workeractor
+	connectionMaker := connectionactor.NewConnectionActor("connection", arr)
 
-	//connectionMaker.ActorLoop(routerActor.ChanToRecvMsg)
+	//my router workeractor
+	_ = routeractor.NewRouterActor("router")
 
+	_ = autoscaleractor.NewAutoscalingActor("autoscaling")
+
+	//log.Println(connectionMaker,routerActor,autoscalingActor)
+
+	connectionMaker.ActorLoop()
+
+	return nil
 }
