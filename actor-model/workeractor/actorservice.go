@@ -7,6 +7,7 @@ import (
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 	message_types "tweeter-sentiment-analyzer/actor-model/message-types"
 	"tweeter-sentiment-analyzer/constants"
+	"tweeter-sentiment-analyzer/models"
 	"tweeter-sentiment-analyzer/utils"
 )
 
@@ -30,7 +31,7 @@ func (actor *Actor) ActorLoop() {
 	for {
 		action := actor.processReceivedMessage(<-actor.ActorProps.ChanToReceiveData)
 		if fmt.Sprintf("%T", action) == constants.JsonNameOfStruct {
-			//log.Println("Stuff to count:")
+			log.Println(utils.AnalyzeSentiments(action.(*models.MyJsonName).Message.Tweet.Text))
 		} else if fmt.Sprintf("%T", action) == constants.PanicMessageType {
 			log.Println("ERROR:")
 			errMsg := message_types.ErrorToSupervisor{
