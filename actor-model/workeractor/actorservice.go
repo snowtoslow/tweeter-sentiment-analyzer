@@ -31,7 +31,7 @@ func (actor *Actor) ActorLoop() {
 	for {
 		action := actor.processReceivedMessage(<-actor.ActorProps.ChanToReceiveData)
 		if fmt.Sprintf("%T", action) == constants.JsonNameOfStruct {
-			log.Printf("%s ----> %v\n", action.(*models.MyJsonName).Message.Tweet.Text, utils.AnalyzeSentiments(action.(*models.MyJsonName).Message.Tweet.Text))
+			log.Printf("TEXT:%s\nRESULT:%v\n", action.(*models.MyJsonName).Message.Tweet.Text, utils.AnalyzeSentiments(action.(*models.MyJsonName).Message.Tweet.Text))
 		} else if fmt.Sprintf("%T", action) == constants.PanicMessageType {
 			log.Println("ERROR:")
 			errMsg := message_types.ErrorToSupervisor{
@@ -39,8 +39,6 @@ func (actor *Actor) ActorLoop() {
 				Message:       message_types.PanicMessage("error occurred in worker actor with identity " + actor.ActorProps.Identity),
 			}
 			actor.SendMessageToSupervisor(errMsg)
-		} else {
-			//log.Printf("Nil is received!")
 		}
 	}
 }
@@ -51,16 +49,6 @@ func (actor *Actor) SendMessage(data interface{}) {
 
 func (actor *Actor) SendMessageToSupervisor(msg interface{}) {
 	actor.DynamicSupervisorAvoidance.SendErrMessage(msg)
-}
-
-func actionsLog(action interface{}) {
-	if fmt.Sprintf("%T", action) == constants.JsonNameOfStruct {
-		//log.Println("Stuff to count:")
-	} else if fmt.Sprintf("%T", action) == constants.PanicMessageType {
-		log.Println("ERROR:")
-	} else {
-		//log.Printf("Nil is received!")
-	}
 }
 
 func (actor *Actor) processReceivedMessage(dataToRecv interface{}) (resultDataStructure interface{}) {
