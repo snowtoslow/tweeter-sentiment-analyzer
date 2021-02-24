@@ -63,8 +63,6 @@ func (dynamicSupervisor *DynamicSupervisor) ActorLoop() {
 				dynamicSupervisor.addActors(actorNumber)
 			}
 		case action := <-dynamicSupervisor.ActorProps.ChanToReceiveData:
-			//dynamicSupervisor.deleteActorByIdentity(action.(message_types.ErrorToSupervisor).ActorIdentity)
-			/*dynamicSupervisor.recreateWorkingActor(action.(message_types.ErrorToSupervisor).ActorIdentity)*/
 			dynamicSupervisor.deleteActorAndRecreateByIdentity(action.(message_types.ErrorToSupervisor).ActorIdentity)
 		}
 	}

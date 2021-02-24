@@ -38,6 +38,6 @@ func AnalyzeSentiments(text string) (result sentiments.StorageOfSentiments) {
 		}
 	}
 
-	result["COUNTER"] = counter
+	result[constants.CounterFinalResult] = counter
 	return
 }

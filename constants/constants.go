@@ -10,4 +10,7 @@ var (
 	GlobalChanSize         = 10
 	PointerJsonSyntaxError = "*json.SyntaxError"
 	DefaultActorPollSize   = 5
+	CounterFinalResult     = "COUNTER_RESULT"
+	SentimentActorPool     = "sentimentActorPool"
+	AggregationActorPool   = "aggregationActorPool"
 )
