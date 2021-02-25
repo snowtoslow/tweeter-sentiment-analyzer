@@ -41,3 +41,7 @@ func AnalyzeSentiments(text string) (result sentiments.StorageOfSentiments) {
 	result[constants.CounterFinalResult] = counter
 	return
 }
+
+func ComputeEngagementRatio(favorites, retweets, followers int) float32 {
+	return 0
+}

@@ -25,7 +25,11 @@ func NewDynamicSupervisor(actorName string) (actorabstraction.IActor, error) {
 		ChanToReceiveNumberOfActorsToCreate: chanToReceiveAmountOfActorsToCreate,
 	}
 
-	if err := dynamicSupervisor.CreateActorPoll(constants.DefaultActorPollSize); err != nil {
+	if err := dynamicSupervisor.CreateActorPoll(constants.DefaultActorPollSize, constants.SentimentActorPool); err != nil {
+		return nil, err
+	}
+
+	if err := dynamicSupervisor.CreateActorPoll(constants.DefaultActorPollSize, constants.AggregationActorPool); err != nil {
 		return nil, err
 	}
 
@@ -36,16 +40,15 @@ func NewDynamicSupervisor(actorName string) (actorabstraction.IActor, error) {
 	return dynamicSupervisor, nil
 }
 
-func (dynamicSupervisor *DynamicSupervisor) CreateActorPoll(numberOfActors int) (err error) {
+func (dynamicSupervisor *DynamicSupervisor) CreateActorPoll(numberOfActors int, actorPollName string) (err error) {
 	var actorPoll []actorabstraction.IActor
 	if numberOfActors <= 1 {
 		return fmt.Errorf("number of actors could not be smaller or equal with one")
 	}
 	for i := 0; i < numberOfActors; i++ {
-		actorPoll = append(actorPoll, workeractor.NewActor("working"+constants.ActorName+strconv.Itoa(i), dynamicSupervisor))
+		actorPoll = append(actorPoll, workeractor.NewActor(actorPollName+"/working"+constants.ActorName+strconv.Itoa(i), dynamicSupervisor))
 	}
-	(*actorregistry.MyActorRegistry)["actorPool"] = &actorPoll
-
+	(*actorregistry.MyActorRegistry)[actorPollName] = &actorPoll
 	return
 }
 
@@ -58,9 +61,9 @@ func (dynamicSupervisor *DynamicSupervisor) ActorLoop() {
 			if actorNumber == 0 {
 				continue
 			} else if actorNumber < 0 {
-				dynamicSupervisor.deleteActors(actorNumber)
+				//dynamicSupervisor.deleteActors(actorNumber)
 			} else {
-				dynamicSupervisor.addActors(actorNumber)
+				//dynamicSupervisor.addActors(actorNumber)
 			}
 		case action := <-dynamicSupervisor.ActorProps.ChanToReceiveData:
 			dynamicSupervisor.deleteActorAndRecreateByIdentity(action.(message_types.ErrorToSupervisor).ActorIdentity)

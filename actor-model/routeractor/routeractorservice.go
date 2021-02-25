@@ -4,6 +4,7 @@ import (
 	"log"
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 	"tweeter-sentiment-analyzer/actor-model/actorregistry"
+	"tweeter-sentiment-analyzer/actor-model/routerstrategy"
 	"tweeter-sentiment-analyzer/constants"
 )
 
@@ -35,15 +36,14 @@ func (routerActor *RouterActor) ReceiveMessageFromSupervisor(data interface{}) {
 }
 
 func (routerActor *RouterActor) ActorLoop() {
+	balancers := routerstrategy.MultipleBalancerEntity(*actorregistry.MyActorRegistry.FindActorByName(constants.SentimentActorPool).(*[]actorabstraction.IActor), *actorregistry.MyActorRegistry.FindActorByName(constants.AggregationActorPool).(*[]actorabstraction.IActor))
 	defer close(routerActor.ActorProps.ChanToReceiveData)
 	for {
 		select {
-		case output := <-routerActor.ActorProps.ChanToReceiveData:
-			if routerActor.CurrentActorIndex >= len(*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor)) {
-				routerActor.CurrentActorIndex = 0
+		case out := <-routerActor.ActorProps.ChanToReceiveData:
+			for _, v := range balancers {
+				v.Balancer(out)
 			}
-			(*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor))[routerActor.CurrentActorIndex].SendMessage(output) // change here from routerActor.Actors[routerActor.CurrentActorIndex].ChanToReceiveData <- output
-			routerActor.CurrentActorIndex++
 		}
 	}
 }

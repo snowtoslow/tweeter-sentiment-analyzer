@@ -5,9 +5,7 @@ import (
 	"log"
 	"regexp"
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
-	message_types "tweeter-sentiment-analyzer/actor-model/message-types"
 	"tweeter-sentiment-analyzer/constants"
-	"tweeter-sentiment-analyzer/models"
 	"tweeter-sentiment-analyzer/utils"
 )
 
@@ -31,14 +29,15 @@ func (actor *Actor) ActorLoop() {
 	for {
 		action := actor.processReceivedMessage(<-actor.ActorProps.ChanToReceiveData)
 		if fmt.Sprintf("%T", action) == constants.JsonNameOfStruct {
-			log.Printf("TEXT:%s\nRESULT:%v\n", action.(*models.MyJsonName).Message.Tweet.Text, utils.AnalyzeSentiments(action.(*models.MyJsonName).Message.Tweet.Text))
+			//log.Printf("%s",actor.ActorProps.Identity)
+			//log.Printf("TEXT:%s\nRESULT:%v\n", action.(*models.MyJsonName).Message.Tweet.Text, utils.AnalyzeSentiments(action.(*models.MyJsonName).Message.Tweet.Text))
 		} else if fmt.Sprintf("%T", action) == constants.PanicMessageType {
 			log.Println("ERROR:")
-			errMsg := message_types.ErrorToSupervisor{
+			/*errMsg := message_types.ErrorToSupervisor{
 				ActorIdentity: actor.ActorProps.Identity,
 				Message:       message_types.PanicMessage("error occurred in worker actor with identity " + actor.ActorProps.Identity),
 			}
-			actor.SendMessageToSupervisor(errMsg)
+			actor.SendMessageToSupervisor(errMsg)*/
 		}
 	}
 }
