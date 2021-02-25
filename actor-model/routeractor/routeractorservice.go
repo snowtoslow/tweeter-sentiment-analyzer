@@ -16,7 +16,7 @@ func NewRouterActor(actorName string) actorabstraction.IActor {
 			Identity:          actorName + constants.ActorName,
 			ChanToReceiveData: chanToRecvMsg,
 		},
-		CurrentActorIndex: 0,
+		RoutingStrategy: routerstrategy.NewRoundRobinStrategy(),
 	}
 
 	go routerActor.ActorLoop()
@@ -36,7 +36,7 @@ func (routerActor *RouterActor) ReceiveMessageFromSupervisor(data interface{}) {
 }
 
 func (routerActor *RouterActor) ActorLoop() {
-	balancers := routerstrategy.MultipleBalancerEntity(*actorregistry.MyActorRegistry.FindActorByName(constants.SentimentActorPool).(*[]actorabstraction.IActor), *actorregistry.MyActorRegistry.FindActorByName(constants.AggregationActorPool).(*[]actorabstraction.IActor))
+	balancers := routerActor.RoutingStrategy.MultipleBalancerEntity(*actorregistry.MyActorRegistry.FindActorByName(constants.SentimentActorPool).(*[]actorabstraction.IActor), *actorregistry.MyActorRegistry.FindActorByName(constants.AggregationActorPool).(*[]actorabstraction.IActor))
 	defer close(routerActor.ActorProps.ChanToReceiveData)
 	for {
 		select {

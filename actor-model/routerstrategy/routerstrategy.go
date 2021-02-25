@@ -9,17 +9,18 @@ type RoundRobin struct {
 	CurrentIndex int
 }
 
-func NewRoundRobinStrategy(actors []actorabstraction.IActor) *RoundRobin {
+func NewRoundRobinStrategy() *RoundRobin {
 	return &RoundRobin{
-		ActorsPool:   actors,
 		CurrentIndex: 0,
 	}
 }
 
-func MultipleBalancerEntity(arrayOfArray ...[]actorabstraction.IActor) []*RoundRobin {
+func (r *RoundRobin) MultipleBalancerEntity(arrayOfArray ...[]actorabstraction.IActor) []*RoundRobin {
 	var balancers []*RoundRobin
 	for _, v := range arrayOfArray {
-		balancers = append(balancers, NewRoundRobinStrategy(v))
+		balancer := NewRoundRobinStrategy()
+		balancer.ActorsPool = v
+		balancers = append(balancers, balancer)
 	}
 	return balancers
 }
