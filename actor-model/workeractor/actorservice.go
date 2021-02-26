@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 	"tweeter-sentiment-analyzer/constants"
+	"tweeter-sentiment-analyzer/models"
 	"tweeter-sentiment-analyzer/utils"
 )
 
@@ -29,8 +31,7 @@ func (actor *Actor) ActorLoop() {
 	for {
 		action := actor.processReceivedMessage(<-actor.ActorProps.ChanToReceiveData)
 		if fmt.Sprintf("%T", action) == constants.JsonNameOfStruct {
-			//log.Printf("%s",actor.ActorProps.Identity)
-			//log.Printf("TEXT:%s\nRESULT:%v\n", action.(*models.MyJsonName).Message.Tweet.Text, utils.AnalyzeSentiments(action.(*models.MyJsonName).Message.Tweet.Text))
+			actor.delegateWork(action)
 		} else if fmt.Sprintf("%T", action) == constants.PanicMessageType {
 			log.Println("ERROR:")
 			/*errMsg := message_types.ErrorToSupervisor{
@@ -39,6 +40,18 @@ func (actor *Actor) ActorLoop() {
 			}
 			actor.SendMessageToSupervisor(errMsg)*/
 		}
+	}
+}
+
+func (actor *Actor) delegateWork(action interface{}) {
+	if strings.Contains(actor.ActorProps.Identity, constants.SentimentActorPool) {
+		//log.Printf("TEXT:%s\nRESULT:%v\n", action.(*models.MyJsonName).Message.Tweet.Text, utils.AnalyzeSentiments(action.(*models.MyJsonName).Message.Tweet.Text))
+		//log.Println("SENTIMENTS ANALySYS")
+	} else if strings.Contains(actor.ActorProps.Identity, constants.AggregationActorPool) {
+		log.Println("ENGAGEMENT RATIO:", utils.EngagementRatio(action.(*models.MyJsonName).Message.Tweet.RetweetedStatus,
+			action.(*models.MyJsonName).Message.Tweet.User.FavouritesCount,
+			action.(*models.MyJsonName).Message.Tweet.User.FollowersCount))
+		//log.Println("AGGREGATION ACTOR")
 	}
 }
 

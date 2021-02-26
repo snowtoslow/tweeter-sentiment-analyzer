@@ -42,6 +42,18 @@ func AnalyzeSentiments(text string) (result sentiments.StorageOfSentiments) {
 	return
 }
 
-func ComputeEngagementRatio(favorites, retweets, followers int) float32 {
-	return 0
+func EngagementRatio(retweetedStatus models.RetweetedStatus, favorites, followers int64) (engagementRatio float64) {
+	//if retweeted status is nil assign 0;
+	//if number of followers is zero return automatically 1
+	if followers != 0 {
+		engagementRatio = float64((favorites + handleRetweetedStatus(retweetedStatus)) / followers)
+	}
+	return
+}
+
+func handleRetweetedStatus(retweetedStatus models.RetweetedStatus) (convertedToNr int64) {
+	if &retweetedStatus != nil {
+		convertedToNr = 1
+	}
+	return
 }
