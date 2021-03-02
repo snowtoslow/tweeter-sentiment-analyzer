@@ -56,8 +56,7 @@ func (dynamicSupervisor *DynamicSupervisor) ActorLoop() {
 	defer close(dynamicSupervisor.ChanToReceiveNumberOfActorsToCreate)
 	for {
 		select {
-		case <-dynamicSupervisor.ChanToReceiveNumberOfActorsToCreate:
-			actorNumber := <-dynamicSupervisor.ChanToReceiveNumberOfActorsToCreate
+		case actorNumber := <-dynamicSupervisor.ChanToReceiveNumberOfActorsToCreate:
 			if actorNumber == 0 {
 				continue
 			} else if actorNumber < 0 {

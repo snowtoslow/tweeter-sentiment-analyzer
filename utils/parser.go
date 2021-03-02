@@ -57,3 +57,12 @@ func handleRetweetedStatus(retweetedStatus models.RetweetedStatus) (convertedToN
 	}
 	return
 }
+
+func GetActorPollNameByActorIdentity(identity string) (actorPollName string) {
+	if strings.Contains(identity, constants.SentimentActorPool) {
+		actorPollName = constants.SentimentActorPool
+	} else if strings.Contains(identity, constants.AggregationActorPool) {
+		actorPollName = constants.AggregationActorPool
+	}
+	return
+}
