@@ -12,28 +12,28 @@ type MyJsonName struct {
 				Urls         []interface{} `json:"urls omitempty"`
 				UserMentions []interface{} `json:"user_mentions omitempty"`
 			} `json:"entities"`
-			FavoriteCount        int64           `json:"favorite_count,omitempty"`
-			Favorited            bool            `json:"favorited,omitempty"`
-			FilterLevel          string          `json:"filter_level,omitempty"`
-			Geo                  interface{}     `json:"geo,omitempty"`
-			ID                   int64           `json:"id,omitempty"`
-			IDStr                string          `json:"id_str,omitempty"`
-			InReplyToScreenName  interface{}     `json:"in_reply_to_screen_name,omitempty"`
-			InReplyToStatusID    interface{}     `json:"in_reply_to_status_id,omitempty"`
-			InReplyToStatusIDStr interface{}     `json:"in_reply_to_status_id_str,omitempty"`
-			InReplyToUserID      interface{}     `json:"in_reply_to_user_id,omitempty"`
-			InReplyToUserIDStr   interface{}     `json:"in_reply_to_user_id_str,omitempty"`
-			IsQuoteStatus        bool            `json:"is_quote_status,omitempty"`
-			Lang                 string          `json:"lang,omitempty"`
-			Place                interface{}     `json:"place,omitempty"`
-			RetweetCount         int64           `json:"retweet_count,omitempty"`
-			Retweeted            bool            `json:"retweeted,omitempty"`
-			RetweetedStatus      RetweetedStatus `json:"retweeted_status,omitempty"`
-			Source               string          `json:"source,omitempty"`
-			Text                 string          `json:"text,omitempty"`
-			TimestampMs          string          `json:"timestamp_ms,omitempty"`
-			Truncated            bool            `json:"truncated,omitempty"`
-			User                 User            `json:"user"`
+			FavoriteCount        int64            `json:"favorite_count,omitempty"`
+			Favorited            bool             `json:"favorited,omitempty"`
+			FilterLevel          string           `json:"filter_level,omitempty"`
+			Geo                  interface{}      `json:"geo,omitempty"`
+			ID                   int64            `json:"id,omitempty"`
+			IDStr                string           `json:"id_str,omitempty"`
+			InReplyToScreenName  interface{}      `json:"in_reply_to_screen_name,omitempty"`
+			InReplyToStatusID    interface{}      `json:"in_reply_to_status_id,omitempty"`
+			InReplyToStatusIDStr interface{}      `json:"in_reply_to_status_id_str,omitempty"`
+			InReplyToUserID      interface{}      `json:"in_reply_to_user_id,omitempty"`
+			InReplyToUserIDStr   interface{}      `json:"in_reply_to_user_id_str,omitempty"`
+			IsQuoteStatus        bool             `json:"is_quote_status,omitempty"`
+			Lang                 string           `json:"lang,omitempty"`
+			Place                interface{}      `json:"place,omitempty"`
+			RetweetCount         int64            `json:"retweet_count,omitempty"`
+			Retweeted            bool             `json:"retweeted,omitempty"`
+			RetweetedStatus      *RetweetedStatus `json:"retweeted_status,omitempty"`
+			Source               string           `json:"source,omitempty"`
+			Text                 string           `json:"text,omitempty"`
+			TimestampMs          string           `json:"timestamp_ms,omitempty"`
+			Truncated            bool             `json:"truncated,omitempty"`
+			User                 User             `json:"user"`
 		} `json:"tweet"`
 		UnixTimestamp100us int64  `json:"unix_timestamp_100us,omitempty"`
 		UniqueId           string `json:"unique_id,omitempty"`
