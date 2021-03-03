@@ -2,7 +2,10 @@ package utils
 
 import (
 	"encoding/json"
+	"fmt"
+	"log"
 	"math"
+	"os/exec"
 	"strings"
 	"tweeter-sentiment-analyzer/actor-model/message-types"
 	"tweeter-sentiment-analyzer/constants"
@@ -28,17 +31,12 @@ func MovingExpAvg(value, oldValue, fdtime, ftime float64) float64 {
 	return r
 }
 
-func AnalyzeSentiments(text string) (result sentiments.StorageOfSentiments) {
-	result = make(map[string]int8)
-	var counter int8
+func AnalyzeSentiments(text string) (counter int8) {
 	for _, v := range strings.Fields(text) {
 		if val, ok := sentiments.SentimentStorage[v]; ok {
-			result[v] = val
 			counter += val
 		}
 	}
-
-	result[constants.CounterFinalResult] = counter
 	return
 }
 
@@ -65,4 +63,13 @@ func GetActorPollNameByActorIdentity(identity string) (actorPollName string) {
 		actorPollName = constants.AggregationActorPool
 	}
 	return
+}
+
+//works only for linux systems!
+func GenerateUuidgen() string {
+	out, err := exec.Command("uuidgen").Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return fmt.Sprintf("%s", out)
 }

@@ -5,6 +5,7 @@ import (
 	"tweeter-sentiment-analyzer/actor-model/connectionactor"
 	"tweeter-sentiment-analyzer/actor-model/dynamicsupervisor"
 	"tweeter-sentiment-analyzer/actor-model/routeractor"
+	"tweeter-sentiment-analyzer/actor-model/sinkactor"
 )
 
 func RunApp(arr []string) error {
@@ -21,6 +22,8 @@ func RunApp(arr []string) error {
 	_ = autoscaleractor.NewAutoscalingActor("autoscaling")
 
 	//log.Println(connectionMaker,routerActor,autoscalingActor)
+
+	_ = sinkactor.NewSinkActor("sink")
 
 	connectionMaker.ActorLoop()
 

@@ -35,6 +35,7 @@ type MyJsonName struct {
 			Truncated            bool            `json:"truncated,omitempty"`
 			User                 User            `json:"user"`
 		} `json:"tweet"`
-		UnixTimestamp100us int64 `json:"unix_timestamp_100us,omitempty"`
+		UnixTimestamp100us int64  `json:"unix_timestamp_100us,omitempty"`
+		UniqueId           string `json:"unique_id,omitempty"`
 	} `json:"message"`
 }
