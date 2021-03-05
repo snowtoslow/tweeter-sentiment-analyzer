@@ -31,4 +31,6 @@ type RetweetedStatus struct {
 	Truncated            bool        `json:"truncated"`
 	User                 User        `json:"user"`
 	UniqueId             string      `json:"unique_id,omitempty"`
+	AggregationRation    float64     `json:"aggregation_ration,omitempty"`
+	SentimentSCore       int8        `json:"sentiment_s_core,omitempty"`
 }

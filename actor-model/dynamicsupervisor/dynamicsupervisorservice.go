@@ -2,7 +2,6 @@ package dynamicsupervisor
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 	"tweeter-sentiment-analyzer/actor-model/actorregistry"
@@ -72,21 +71,20 @@ func (dynamicSupervisor *DynamicSupervisor) ActorLoop() {
 	}
 }
 
-func (dynamicSupervisor *DynamicSupervisor)deleteActorsFromBothPools(numberOfActors int)  {
-	poolsName := []string{constants.AggregationActorPool,constants.SentimentActorPool}
-	for _,v :=range poolsName{
+func (dynamicSupervisor *DynamicSupervisor) deleteActorsFromBothPools(numberOfActors int) {
+	poolsName := []string{constants.AggregationActorPool, constants.SentimentActorPool}
+	for _, v := range poolsName {
 		go func(v string) {
-			dynamicSupervisor.deleteActors(numberOfActors,v)
+			dynamicSupervisor.deleteActors(numberOfActors, v)
 		}(v)
 	}
 }
 
-
-func (dynamicSupervisor *DynamicSupervisor)addActorsToBothPools(numberOfActors int){
-	poolsName := []string{constants.AggregationActorPool,constants.SentimentActorPool}
-	for _,v :=range poolsName{
+func (dynamicSupervisor *DynamicSupervisor) addActorsToBothPools(numberOfActors int) {
+	poolsName := []string{constants.AggregationActorPool, constants.SentimentActorPool}
+	for _, v := range poolsName {
 		go func(v string) {
-			dynamicSupervisor.addActors(numberOfActors,v)
+			dynamicSupervisor.addActors(numberOfActors, v)
 		}(v)
 	}
 }
@@ -100,7 +98,7 @@ func (dynamicSupervisor *DynamicSupervisor) SendErrMessage(msg interface{}) {
 }
 
 //reusi this function for two arrays and reuse it
-func (dynamicSupervisor *DynamicSupervisor) addActors(numberOfActors int,poolName string) {
+func (dynamicSupervisor *DynamicSupervisor) addActors(numberOfActors int, poolName string) {
 	for i := 0; i < numberOfActors; i++ {
 		*actorregistry.MyActorRegistry.FindActorByName(poolName).(*[]actorabstraction.IActor) =
 			append(*actorregistry.MyActorRegistry.FindActorByName(poolName).(*[]actorabstraction.IActor),
@@ -109,8 +107,8 @@ func (dynamicSupervisor *DynamicSupervisor) addActors(numberOfActors int,poolNam
 }
 
 //reuse this function for both array and do it concurrently;
-func (dynamicSupervisor *DynamicSupervisor) deleteActors(numberOfActors int,poolName string) {
-	dynamicSupervisor.sendToRouter(dynamicSupervisor.collectDataOfActorsToBeDroppedToSingleChan(-numberOfActors,poolName))
+func (dynamicSupervisor *DynamicSupervisor) deleteActors(numberOfActors int, poolName string) {
+	dynamicSupervisor.sendToRouter(dynamicSupervisor.collectDataOfActorsToBeDroppedToSingleChan(-numberOfActors, poolName))
 	for i := 0; i < -numberOfActors; i++ {
 		*actorregistry.MyActorRegistry.FindActorByName(poolName).(*[]actorabstraction.IActor) =
 			append((*actorregistry.MyActorRegistry.FindActorByName(poolName).(*[]actorabstraction.IActor))[:i],
@@ -120,7 +118,7 @@ func (dynamicSupervisor *DynamicSupervisor) deleteActors(numberOfActors int,pool
 
 //log.Printf("idetity: %s--->%s",(*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor))[i].(*workeractor.Actor).ActorProps.Identity,a.(string))
 func (dynamicSupervisor *DynamicSupervisor) deleteActorAndRecreateByIdentity(actorIdentity string) {
-	log.Println("Delete actor by identity:", actorIdentity)
+	//log.Println("Delete actor by identity:", actorIdentity)
 	concreteActorPool := utils.GetActorPollNameByActorIdentity(actorIdentity)
 	for i := 0; i < len(*actorregistry.MyActorRegistry.FindActorByName(concreteActorPool).(*[]actorabstraction.IActor)); i++ {
 		if (*actorregistry.MyActorRegistry.FindActorByName(concreteActorPool).(*[]actorabstraction.IActor))[i].(*workeractor.Actor).ActorProps.Identity == actorIdentity {
@@ -142,7 +140,7 @@ func (dynamicSupervisor *DynamicSupervisor) deleteActorAndRecreateByIdentity(act
 }
 
 func (dynamicSupervisor *DynamicSupervisor) pushRecreatedWorkingActorToArray(recreatedActor *workeractor.Actor) {
-	log.Println("recreate actor with identity:", recreatedActor.ActorProps.Identity)
+	//log.Println("recreate actor with identity:", recreatedActor.ActorProps.Identity)
 
 	actorPoolName := utils.GetActorPollNameByActorIdentity(recreatedActor.ActorProps.Identity)
 

@@ -5,6 +5,7 @@ var (
 	JsonRegex              = "\\{.*\\:\\{.*\\:.*\\}\\}|\\{(.*?)\\}"
 	EndPointToTrigger      = "http://localhost:4000"
 	JsonNameOfStruct       = "*models.MyJsonName"
+	RetweetedStatus        = "models.RetweetedStatus"
 	PanicMessageType       = "message_types.PanicMessage"
 	ActorName              = "_actor_"
 	GlobalChanSize         = 10
