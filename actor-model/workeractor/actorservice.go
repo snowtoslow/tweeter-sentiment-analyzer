@@ -6,8 +6,8 @@ import (
 	"strings"
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 	"tweeter-sentiment-analyzer/actor-model/actorregistry"
+	"tweeter-sentiment-analyzer/actor-model/aggregatoractor"
 	message_types "tweeter-sentiment-analyzer/actor-model/message-types"
-	"tweeter-sentiment-analyzer/actor-model/sinkactor"
 	"tweeter-sentiment-analyzer/constants"
 	"tweeter-sentiment-analyzer/models"
 	"tweeter-sentiment-analyzer/utils"
@@ -38,7 +38,7 @@ func (actor *Actor) ActorLoop() {
 			}
 			generatedId := utils.GenerateUuidgen()
 			action.(*models.MyJsonName).Message.UniqueId = generatedId
-			actorregistry.MyActorRegistry.FindActorByName("sinkActor").(*sinkactor.SinkActor).SendMessage(action)
+			actorregistry.MyActorRegistry.FindActorByName("aggregatorActor").(*aggregatoractor.AggregatorActor).SendMessage(action)
 			actor.delegateWork(action.(*models.MyJsonName).Message.Tweet.Text,
 				action.(*models.MyJsonName).Message.Tweet.RetweetedStatus,
 				action.(*models.MyJsonName).Message.Tweet.User.FavouritesCount,
@@ -57,7 +57,7 @@ func (actor *Actor) ActorLoop() {
 func (actor *Actor) extractSubTweetsAndAnalyze(mainTweet interface{}) {
 	generatedId := utils.GenerateUuidgen()
 	mainTweet.(*models.MyJsonName).Message.Tweet.RetweetedStatus.UniqueId = generatedId
-	actorregistry.MyActorRegistry.FindActorByName("sinkActor").(*sinkactor.SinkActor).SendMessage(mainTweet.(*models.MyJsonName).Message.Tweet.RetweetedStatus)
+	actorregistry.MyActorRegistry.FindActorByName("aggregatorActor").(*aggregatoractor.AggregatorActor).SendMessage(mainTweet.(*models.MyJsonName).Message.Tweet.RetweetedStatus)
 	actor.delegateWork(mainTweet.(*models.MyJsonName).Message.Tweet.RetweetedStatus.Text,
 		mainTweet.(*models.MyJsonName).Message.Tweet.RetweetedStatus,
 		mainTweet.(*models.MyJsonName).Message.Tweet.RetweetedStatus.FavoriteCount,
@@ -67,29 +67,15 @@ func (actor *Actor) extractSubTweetsAndAnalyze(mainTweet interface{}) {
 
 func (actor *Actor) delegateWork(textForSentimentAnalysis string, retweetedStatus models.RetweetedStatus, favCount int64, followersCount int64, generatedId string) {
 	if strings.Contains(actor.ActorProps.Identity, constants.SentimentActorPool) {
-		actorregistry.MyActorRegistry.FindActorByName("sinkActor").(*sinkactor.SinkActor).SendMessage(&models.SentimentAnalysis{
+		actorregistry.MyActorRegistry.FindActorByName("aggregatorActor").(*aggregatoractor.AggregatorActor).SendMessage(&models.SentimentAnalysis{
 			Score:    utils.AnalyzeSentiments(textForSentimentAnalysis),
 			UniqueId: generatedId,
 		})
-		/*actorregistry.MyActorRegistry.FindActorByName("sinkActor").(*sinkactor.SinkActor).SendMessage(struct {
-			SentimentValue int8
-			GeneratedId    string
-		}{
-			SentimentValue: utils.AnalyzeSentiments(textForSentimentAnalysis),
-			GeneratedId:    generatedId,
-		})*/
 	} else if strings.Contains(actor.ActorProps.Identity, constants.AggregationActorPool) {
-		actorregistry.MyActorRegistry.FindActorByName("sinkActor").(*sinkactor.SinkActor).SendMessage(&models.EngagementRation{
+		actorregistry.MyActorRegistry.FindActorByName("aggregatorActor").(*aggregatoractor.AggregatorActor).SendMessage(&models.EngagementRation{
 			Ratio:    utils.EngagementRatio(retweetedStatus, favCount, followersCount),
 			UniqueId: generatedId,
 		})
-		/*actorregistry.MyActorRegistry.FindActorByName("sinkActor").(*sinkactor.SinkActor).SendMessage(struct {
-			EngagementRatio float64
-			GeneratedId     string
-		}{
-			EngagementRatio: utils.EngagementRatio(retweetedStatus, favCount, followersCount),
-			GeneratedId:     generatedId,
-		})*/
 	}
 }
 

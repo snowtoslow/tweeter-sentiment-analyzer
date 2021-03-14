@@ -1,12 +1,16 @@
 package sinkactor
 
 import (
+	"context"
 	"fmt"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/writeconcern"
 	"log"
+	"time"
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 	"tweeter-sentiment-analyzer/actor-model/actorregistry"
 	"tweeter-sentiment-analyzer/constants"
-	"tweeter-sentiment-analyzer/models"
 )
 
 func NewSinkActor(actorName string) actorabstraction.IActor {
@@ -16,7 +20,6 @@ func NewSinkActor(actorName string) actorabstraction.IActor {
 			Identity:          actorName + constants.ActorName,
 			ChanToReceiveData: chanToRecv,
 		},
-		TweetStorage: map[string]interface{}{},
 	}
 
 	go sinkActor.ActorLoop()
@@ -28,81 +31,81 @@ func NewSinkActor(actorName string) actorabstraction.IActor {
 
 func (sinkActor *SinkActor) ActorLoop() {
 	defer close(sinkActor.ActorProps.ChanToReceiveData)
+	ticker := time.NewTicker(200 * time.Millisecond)
+
 	for {
 		select {
 		case action := <-sinkActor.ActorProps.ChanToReceiveData:
 			sinkActor.SinkBuffer = append(sinkActor.SinkBuffer, action)
-			if fmt.Sprintf("%T", action) == constants.JsonNameOfStruct || fmt.Sprintf("%T", action) == constants.RetweetedStatus {
-				//log.Println("TWEET ID:",action.(*models.MyJsonName).Message.UniqueId)
-				sinkActor.pushIntoTweetStorage(action)
-			}
-
 			if len(sinkActor.SinkBuffer) == 128 {
-				log.Println("CLEAR BUFFER")
-				//log.Println("SINK:",sinkActor.SinkBuffer)
-				sinkActor.getSmthTest()
+				log.Println("FULL BUFFER:", len(sinkActor.SinkBuffer))
 				sinkActor.SinkBuffer = sinkActor.SinkBuffer[:0]
 			}
+		case <-ticker.C:
+			log.Println("after 200ms:", len(sinkActor.SinkBuffer))
+			sinkActor.SinkBuffer = sinkActor.SinkBuffer[:0]
 		}
 	}
 }
 
-func (sinkActor *SinkActor) getSmthTest() {
-	for _, v := range sinkActor.SinkBuffer {
-		if fmt.Sprintf("%T", v) != constants.JsonNameOfStruct && fmt.Sprintf("%T", v) != constants.RetweetedStatus {
-			switch v.(type) {
-			case *models.EngagementRation:
-				//log.Println("ENG RATIO:")
-				if val, ok := sinkActor.TweetStorage[v.(*models.EngagementRation).UniqueId]; ok {
-					log.Println("found in eng ration!", len(sinkActor.TweetStorage))
-					sinkActor.addEngRation(val, v.(*models.EngagementRation).Ratio)
-					delete(sinkActor.TweetStorage, v.(*models.EngagementRation).UniqueId)
-					//log.Println("after delete:",len(sinkActor.TweetStorage))
-				} else {
-					log.Println("not found in eng ratio!")
-				}
-			case *models.SentimentAnalysis:
-				//log.Println("SENT ANALYSIS:")
-				if val, ok := sinkActor.TweetStorage[v.(*models.SentimentAnalysis).UniqueId]; ok {
-					log.Println("found in sent anal!", len(sinkActor.TweetStorage))
-					sinkActor.addSentimentAnalysis(val, v.(*models.SentimentAnalysis).Score)
-					delete(sinkActor.TweetStorage, v.(*models.SentimentAnalysis).UniqueId)
-					//log.Println("after delete:",len(sinkActor.TweetStorage))
-				} else {
-					log.Println("not found in eng analysis")
-				}
-			}
+// WithTransactionExample is an example of using the Session.WithTransaction function.
+func (sinkActor *SinkActor) WithTransactionExample() {
+	ctx := context.Background()
 
+	clientOpts := options.Client().ApplyURI(constants.ClusterDatabaseAddress)
+	client, err := mongo.Connect(ctx, clientOpts)
+	if err != nil {
+		panic(err)
+	}
+	defer func() { _ = client.Disconnect(ctx) }()
+
+	// Prereq: Create collections.
+	wcMajority := writeconcern.New(writeconcern.WMajority(), writeconcern.WTimeout(1*time.Second))
+	wcMajorityCollectionOpts := options.Collection().SetWriteConcern(wcMajority)
+	fooColl := client.Database(constants.DatabaseName).Collection(constants.TweetsCollection, wcMajorityCollectionOpts)
+
+	// Step 1: Define the callback that specifies the sequence of operations to perform inside the transaction.
+	callback := func(sessCtx mongo.SessionContext) (interface{}, error) {
+		// Important: You must pass sessCtx as the Context parameter to the operations for them to be executed in the
+		// transaction.
+
+		res, err := fooColl.InsertMany(sessCtx, sinkActor.SinkBuffer)
+		if err != nil {
+			log.Println("ERR:", err)
+			return nil, err
 		}
 
+		return res, nil
 	}
+
+	// Step 2: Start a session and run the callback using WithTransaction.
+	session, err := client.StartSession()
+	if err != nil {
+		panic(err)
+	}
+	defer session.EndSession(ctx)
+
+	result, err := session.WithTransaction(ctx, callback)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("result: %v\n", result)
 }
 
-func (sinkActor *SinkActor) addEngRation(val interface{}, engRatio float64) {
-	switch val.(type) {
-	case *models.RetweetedStatus:
-		val.(*models.RetweetedStatus).AggregationRation = engRatio
-	case *models.MyJsonName:
-		val.(*models.MyJsonName).Message.AggregationRation = engRatio
+func (sinkActor *SinkActor) InsertDataInDb() (err error) {
+	/*if err := sinkActor.InsertDataInDb();err!=nil{
+		log.Fatal("Error inserting!",err)
+	}*/
+	mongoClient, err := mongo.Connect(context.Background(), options.Client().ApplyURI(constants.ClusterDatabaseAddress))
+	if err != nil {
+		return err
 	}
-}
 
-func (sinkActor *SinkActor) addSentimentAnalysis(val interface{}, sentScore int8) {
-	switch val.(type) {
-	case *models.RetweetedStatus:
-		val.(*models.RetweetedStatus).SentimentSCore = sentScore
-	case *models.MyJsonName:
-		val.(*models.MyJsonName).Message.SentimentSCore = sentScore
+	if _, err = mongoClient.Database(constants.DatabaseName).Collection(constants.TweetsCollection).InsertMany(context.Background(), sinkActor.SinkBuffer); err != nil {
+		return err
 	}
-}
 
-func (sinkActor *SinkActor) pushIntoTweetStorage(action interface{}) {
-	if fmt.Sprintf("%T", action) == constants.JsonNameOfStruct {
-		//log.Println("TWEET ID:",action.(*models.MyJsonName).Message.UniqueId)
-		sinkActor.TweetStorage[action.(*models.MyJsonName).Message.UniqueId] = action.(*models.MyJsonName)
-	} else if fmt.Sprintf("%T", action) == constants.RetweetedStatus {
-		sinkActor.TweetStorage[action.(models.RetweetedStatus).UniqueId] = action.(models.RetweetedStatus)
-	}
+	return nil
 }
 
 func (sinkActor *SinkActor) SendMessage(msg interface{}) {

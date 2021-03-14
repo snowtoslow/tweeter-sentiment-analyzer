@@ -102,7 +102,7 @@ func (dynamicSupervisor *DynamicSupervisor) addActors(numberOfActors int, poolNa
 	for i := 0; i < numberOfActors; i++ {
 		*actorregistry.MyActorRegistry.FindActorByName(poolName).(*[]actorabstraction.IActor) =
 			append(*actorregistry.MyActorRegistry.FindActorByName(poolName).(*[]actorabstraction.IActor),
-				workeractor.NewActor("working"+constants.ActorName+strconv.Itoa(i+5), dynamicSupervisor))
+				workeractor.NewActor(poolName+"/working"+constants.ActorName+strconv.Itoa(i+5), dynamicSupervisor))
 	}
 }
 

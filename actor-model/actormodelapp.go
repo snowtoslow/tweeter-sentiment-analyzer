@@ -1,6 +1,7 @@
 package actor_model
 
 import (
+	"tweeter-sentiment-analyzer/actor-model/aggregatoractor"
 	"tweeter-sentiment-analyzer/actor-model/autoscaleractor"
 	"tweeter-sentiment-analyzer/actor-model/connectionactor"
 	"tweeter-sentiment-analyzer/actor-model/dynamicsupervisor"
@@ -21,7 +22,7 @@ func RunApp(arr []string) error {
 
 	_ = autoscaleractor.NewAutoscalingActor("autoscaling")
 
-	//log.Println(connectionMaker,routerActor,autoscalingActor)
+	_ = aggregatoractor.NewAggregatorActor("aggregator")
 
 	_ = sinkactor.NewSinkActor("sink")
 

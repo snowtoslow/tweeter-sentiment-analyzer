@@ -40,11 +40,27 @@ func AnalyzeSentiments(text string) (counter int8) {
 	return
 }
 
+func AnalyzeSentimentsTest(text string) (result sentiments.StorageOfSentiments) {
+	result = make(map[string]int8)
+	var counter int8
+	for _, v := range strings.Fields(text) {
+		if val, ok := sentiments.SentimentStorage[v]; ok {
+			result[v] = val
+			counter += val
+		}
+	}
+
+	result["COUNTER"] = counter
+	return
+}
+
 func EngagementRatio(retweetedStatus models.RetweetedStatus, favorites, followers int64) (engagementRatio float64) {
 	//if retweeted status is nil assign 0;
 	//if number of followers is zero return automatically 1
 	if followers != 0 {
 		engagementRatio = float64((favorites + handleRetweetedStatus(retweetedStatus)) / followers)
+	} else {
+		engagementRatio = 1
 	}
 	return
 }
