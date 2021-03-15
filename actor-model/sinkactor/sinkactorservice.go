@@ -2,10 +2,8 @@ package sinkactor
 
 import (
 	"context"
-	"fmt"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/writeconcern"
 	"log"
 	"time"
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
@@ -39,70 +37,58 @@ func (sinkActor *SinkActor) ActorLoop() {
 			sinkActor.SinkBuffer = append(sinkActor.SinkBuffer, action)
 			if len(sinkActor.SinkBuffer) == 128 {
 				log.Println("FULL BUFFER:", len(sinkActor.SinkBuffer))
+				myArray := sinkActor.SinkBuffer
+				go func() {
+					if err := sinkActor.insertDataInDb(myArray); err != nil {
+						log.Fatal("Error inserting 200 ms!", err)
+					}
+				}()
 				sinkActor.SinkBuffer = sinkActor.SinkBuffer[:0]
+				ticker.Reset(200 * time.Millisecond)
 			}
 		case <-ticker.C:
 			log.Println("after 200ms:", len(sinkActor.SinkBuffer))
+			myArray := sinkActor.SinkBuffer
+			go func() {
+				if err := sinkActor.insertDataInDb(myArray); err != nil {
+					log.Fatal("Error inserting 200 ms!", err)
+				}
+			}()
 			sinkActor.SinkBuffer = sinkActor.SinkBuffer[:0]
 		}
 	}
 }
 
-// WithTransactionExample is an example of using the Session.WithTransaction function.
-func (sinkActor *SinkActor) WithTransactionExample() {
-	ctx := context.Background()
-
-	clientOpts := options.Client().ApplyURI(constants.ClusterDatabaseAddress)
-	client, err := mongo.Connect(ctx, clientOpts)
-	if err != nil {
-		panic(err)
-	}
-	defer func() { _ = client.Disconnect(ctx) }()
-
-	// Prereq: Create collections.
-	wcMajority := writeconcern.New(writeconcern.WMajority(), writeconcern.WTimeout(1*time.Second))
-	wcMajorityCollectionOpts := options.Collection().SetWriteConcern(wcMajority)
-	fooColl := client.Database(constants.DatabaseName).Collection(constants.TweetsCollection, wcMajorityCollectionOpts)
-
-	// Step 1: Define the callback that specifies the sequence of operations to perform inside the transaction.
-	callback := func(sessCtx mongo.SessionContext) (interface{}, error) {
-		// Important: You must pass sessCtx as the Context parameter to the operations for them to be executed in the
-		// transaction.
-
-		res, err := fooColl.InsertMany(sessCtx, sinkActor.SinkBuffer)
-		if err != nil {
-			log.Println("ERR:", err)
-			return nil, err
+func (sinkActor *SinkActor) insertAndClear(array []interface{}) error {
+	var myeer error
+	go func() {
+		if err := sinkActor.insertDataInDb(array); err != nil {
+			myeer = err
+			log.Fatal("Error inserting 200 ms!", err)
 		}
-
-		return res, nil
-	}
-
-	// Step 2: Start a session and run the callback using WithTransaction.
-	session, err := client.StartSession()
-	if err != nil {
-		panic(err)
-	}
-	defer session.EndSession(ctx)
-
-	result, err := session.WithTransaction(ctx, callback)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("result: %v\n", result)
+	}()
+	sinkActor.SinkBuffer = sinkActor.SinkBuffer[:0]
+	return myeer
 }
 
-func (sinkActor *SinkActor) InsertDataInDb() (err error) {
-	/*if err := sinkActor.InsertDataInDb();err!=nil{
-		log.Fatal("Error inserting!",err)
-	}*/
-	mongoClient, err := mongo.Connect(context.Background(), options.Client().ApplyURI(constants.ClusterDatabaseAddress))
+func (sinkActor *SinkActor) insertDataInDb(array []interface{}) (err error) {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	mongoClient, err := mongo.Connect(ctx, options.Client().ApplyURI(constants.ClusterDatabaseAddress))
 	if err != nil {
-		return err
+		return
 	}
 
-	if _, err = mongoClient.Database(constants.DatabaseName).Collection(constants.TweetsCollection).InsertMany(context.Background(), sinkActor.SinkBuffer); err != nil {
-		return err
+	defer func() {
+		if err = mongoClient.Disconnect(ctx); err != nil {
+			return
+		}
+	}()
+
+	if _, err = mongoClient.Database(constants.DatabaseName).Collection(constants.TweetsCollection).InsertMany(ctx, array); err != nil {
+		return
 	}
 
 	return nil
