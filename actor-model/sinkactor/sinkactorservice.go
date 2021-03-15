@@ -29,7 +29,7 @@ func NewSinkActor(actorName string) actorabstraction.IActor {
 
 func (sinkActor *SinkActor) ActorLoop() {
 	defer close(sinkActor.ActorProps.ChanToReceiveData)
-	ticker := time.NewTicker(200 * time.Millisecond)
+	ticker := time.NewTicker(constants.TickerInterval)
 
 	for {
 		select {
@@ -40,7 +40,7 @@ func (sinkActor *SinkActor) ActorLoop() {
 				if err := sinkActor.insertAndClear(); err != nil {
 					log.Fatal("Error inserting full buffer!", err)
 				}
-				ticker.Reset(200 * time.Millisecond)
+				ticker.Reset(constants.TickerInterval)
 			}
 		case <-ticker.C:
 			log.Println("after 200ms:", len(sinkActor.SinkBuffer))

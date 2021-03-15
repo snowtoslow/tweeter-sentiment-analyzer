@@ -1,5 +1,7 @@
 package constants
 
+import "time"
+
 const (
 	PanicMessage         = "{\"message\": panic}"
 	JsonRegex            = "\\{.*\\:\\{.*\\:.*\\}\\}|\\{(.*?)\\}"
@@ -17,4 +19,5 @@ const (
 	DatabaseName           = "tweet-db"
 	TweetsCollection       = "tweets"
 	UserCollection         = "users"
+	TickerInterval         = 200 * time.Millisecond
 )

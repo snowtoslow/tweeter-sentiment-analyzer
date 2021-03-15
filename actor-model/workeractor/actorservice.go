@@ -38,6 +38,7 @@ func (actor *Actor) ActorLoop() {
 			}
 			generatedId := utils.GenerateUuidgen()
 			action.(*models.MyJsonName).Message.UniqueId = generatedId
+			//action.(*models.MyJsonName).Message.Tweet.User.UniqueId = generatedId
 			actorregistry.MyActorRegistry.FindActorByName("aggregatorActor").(*aggregatoractor.AggregatorActor).SendMessage(action)
 			actor.delegateWork(action.(*models.MyJsonName).Message.Tweet.Text,
 				action.(*models.MyJsonName).Message.Tweet.RetweetedStatus,
@@ -57,6 +58,8 @@ func (actor *Actor) ActorLoop() {
 func (actor *Actor) extractSubTweetsAndAnalyze(mainTweet interface{}) {
 	generatedId := utils.GenerateUuidgen()
 	mainTweet.(*models.MyJsonName).Message.Tweet.RetweetedStatus.UniqueId = generatedId
+	//add unique id to user for generated tweet:
+	//mainTweet.(*models.MyJsonName).Message.Tweet.User.UniqueId = generatedId
 	actorregistry.MyActorRegistry.FindActorByName("aggregatorActor").(*aggregatoractor.AggregatorActor).SendMessage(mainTweet.(*models.MyJsonName).Message.Tweet.RetweetedStatus)
 	actor.delegateWork(mainTweet.(*models.MyJsonName).Message.Tweet.RetweetedStatus.Text,
 		mainTweet.(*models.MyJsonName).Message.Tweet.RetweetedStatus,

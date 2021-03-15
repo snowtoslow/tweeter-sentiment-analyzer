@@ -33,10 +33,10 @@ type MyJsonName struct {
 			Text                 string          `json:"text,omitempty"`
 			TimestampMs          string          `json:"timestamp_ms,omitempty"`
 			Truncated            bool            `json:"truncated,omitempty"`
-			User                 User            `json:"user"`
+			User                 User            `json:"user" bson:"-"`
 		} `json:"tweet"`
 		UnixTimestamp100us int64   `json:"unix_timestamp_100us,omitempty"`
-		UniqueId           string  `json:"unique_id,omitempty"`
+		UniqueId           string  `json:"unique_id,omitempty" bson:"-"`
 		AggregationRation  float64 `json:"aggregation_ration,omitempty"`
 		SentimentSCore     int8    `json:"sentiment_s_core,omitempty"`
 	} `json:"message"`
