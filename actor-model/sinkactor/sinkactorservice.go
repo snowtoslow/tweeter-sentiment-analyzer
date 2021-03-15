@@ -37,38 +37,30 @@ func (sinkActor *SinkActor) ActorLoop() {
 			sinkActor.SinkBuffer = append(sinkActor.SinkBuffer, action)
 			if len(sinkActor.SinkBuffer) == 128 {
 				log.Println("FULL BUFFER:", len(sinkActor.SinkBuffer))
-				myArray := sinkActor.SinkBuffer
-				go func() {
-					if err := sinkActor.insertDataInDb(myArray); err != nil {
-						log.Fatal("Error inserting 200 ms!", err)
-					}
-				}()
-				sinkActor.SinkBuffer = sinkActor.SinkBuffer[:0]
+				if err := sinkActor.insertAndClear(); err != nil {
+					log.Fatal("Error inserting full buffer!", err)
+				}
 				ticker.Reset(200 * time.Millisecond)
 			}
 		case <-ticker.C:
 			log.Println("after 200ms:", len(sinkActor.SinkBuffer))
-			myArray := sinkActor.SinkBuffer
-			go func() {
-				if err := sinkActor.insertDataInDb(myArray); err != nil {
-					log.Fatal("Error inserting 200 ms!", err)
-				}
-			}()
-			sinkActor.SinkBuffer = sinkActor.SinkBuffer[:0]
+			if err := sinkActor.insertAndClear(); err != nil {
+				log.Fatal("Error inserting buff after 200ms!", err)
+			}
 		}
 	}
 }
 
-func (sinkActor *SinkActor) insertAndClear(array []interface{}) error {
-	var myeer error
+func (sinkActor *SinkActor) insertAndClear() (errorOccurredInInsert error) {
+	myArray := sinkActor.SinkBuffer
 	go func() {
-		if err := sinkActor.insertDataInDb(array); err != nil {
-			myeer = err
-			log.Fatal("Error inserting 200 ms!", err)
+		if err := sinkActor.insertDataInDb(myArray); err != nil {
+			errorOccurredInInsert = err
+			log.Fatal("Error occurred in insert and clear function", err)
 		}
 	}()
 	sinkActor.SinkBuffer = sinkActor.SinkBuffer[:0]
-	return myeer
+	return
 }
 
 func (sinkActor *SinkActor) insertDataInDb(array []interface{}) (err error) {
