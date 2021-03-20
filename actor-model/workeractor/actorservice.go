@@ -60,7 +60,7 @@ func (actor *Actor) extractSubTweetsAndAnalyze(mainTweet interface{}) {
 	generatedId := utils.GenerateUuidgen()
 	mainTweet.(*models.MyJsonName).Message.Tweet.RetweetedStatus.UniqueId = generatedId
 	//add unique id to user from extracted tweet:
-	mainTweet.(*models.MyJsonName).Message.Tweet.User.UniqueId = generatedId
+	mainTweet.(*models.MyJsonName).Message.Tweet.RetweetedStatus.User.UniqueId = generatedId
 	actorregistry.MyActorRegistry.FindActorByName("aggregatorActor").(*aggregatoractor.AggregatorActor).SendMessage(mainTweet.(*models.MyJsonName).Message.Tweet.RetweetedStatus)
 	actor.delegateWork(mainTweet.(*models.MyJsonName).Message.Tweet.RetweetedStatus.Text,
 		mainTweet.(*models.MyJsonName).Message.Tweet.RetweetedStatus,
