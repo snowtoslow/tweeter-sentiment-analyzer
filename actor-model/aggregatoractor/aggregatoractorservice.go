@@ -33,6 +33,7 @@ func (aggregatorActor *AggregatorActor) ActorLoop() {
 		select {
 		case action := <-aggregatorActor.ActorProps.ChanToReceiveData:
 			if fmt.Sprintf("%T", action) == constants.JsonNameOfStruct || fmt.Sprintf("%T", action) == constants.RetweetedStatus {
+				aggregatorActor.extractAndSendUserByInterfaceType(action)
 				aggregatorActor.pushIntoTweetStorage(action)
 			} else {
 				aggregatorActor.addTweetFields(action)
@@ -58,10 +59,18 @@ func (aggregatorActor *AggregatorActor) addTweetFields(action interface{}) {
 	delete(aggregatorActor.StorageToAggregateTweets, aggregatorActor.getIdByInterfaceType(myVal))
 }
 
+func (aggregatorActor *AggregatorActor) extractAndSendUserByInterfaceType(value interface{}) {
+	if fmt.Sprintf("%T", value) == constants.JsonNameOfStruct {
+		actorregistry.MyActorRegistry.FindActorByName("sinkActor").(*sinkactor.SinkActor).SendMessage(value.(*models.MyJsonName).Message.Tweet.User)
+	} else if fmt.Sprintf("%T", value) == constants.RetweetedStatus {
+		actorregistry.MyActorRegistry.FindActorByName("sinkActor").(*sinkactor.SinkActor).SendMessage(value.(models.RetweetedStatus).User)
+	}
+}
+
 func (aggregatorActor *AggregatorActor) getIdByInterfaceType(value interface{}) (keyId string) {
 	if fmt.Sprintf("%T", value) == "*models.RetweetedStatus" {
 		keyId = value.(*models.RetweetedStatus).UniqueId
-	} else if fmt.Sprintf("%T", value) == "*models.MyJsonName" {
+	} else if fmt.Sprintf("%T", value) == constants.JsonNameOfStruct {
 		keyId = value.(*models.MyJsonName).Message.UniqueId
 	}
 	return
@@ -70,7 +79,7 @@ func (aggregatorActor *AggregatorActor) getIdByInterfaceType(value interface{}) 
 func (aggregatorActor *AggregatorActor) addEngRation(val interface{}, engRatio float64) {
 	if fmt.Sprintf("%T", val) == "*models.RetweetedStatus" {
 		val.(*models.RetweetedStatus).AggregationRation = engRatio
-	} else if fmt.Sprintf("%T", val) == "*models.MyJsonName" {
+	} else if fmt.Sprintf("%T", val) == constants.JsonNameOfStruct {
 		val.(*models.MyJsonName).Message.AggregationRation = engRatio
 	}
 }
@@ -78,14 +87,13 @@ func (aggregatorActor *AggregatorActor) addEngRation(val interface{}, engRatio f
 func (aggregatorActor *AggregatorActor) addSentimentAnalysis(val interface{}, sentScore int8) {
 	if fmt.Sprintf("%T", val) == "*models.RetweetedStatus" {
 		val.(*models.RetweetedStatus).SentimentSCore = sentScore
-	} else if fmt.Sprintf("%T", val) == "*models.MyJsonName" {
+	} else if fmt.Sprintf("%T", val) == constants.JsonNameOfStruct {
 		val.(*models.MyJsonName).Message.SentimentSCore = sentScore
 	}
 }
 
 func (aggregatorActor *AggregatorActor) pushIntoTweetStorage(action interface{}) {
 	if fmt.Sprintf("%T", action) == constants.JsonNameOfStruct {
-		//log.Println("TWEET ID:",action.(*models.MyJsonName).Message.UniqueId)
 		aggregatorActor.StorageToAggregateTweets[action.(*models.MyJsonName).Message.UniqueId] = action.(*models.MyJsonName)
 	} else if fmt.Sprintf("%T", action) == constants.RetweetedStatus {
 		aggregatorActor.StorageToAggregateTweets[action.(models.RetweetedStatus).UniqueId] = action.(models.RetweetedStatus)

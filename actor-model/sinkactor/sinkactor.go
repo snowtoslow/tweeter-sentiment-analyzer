@@ -4,5 +4,5 @@ import "tweeter-sentiment-analyzer/actor-model/actorabstraction"
 
 type SinkActor struct {
 	ActorProps actorabstraction.AbstractActor
-	SinkBuffer []interface{}
+	sinkBuffer map[string][]interface{}
 }

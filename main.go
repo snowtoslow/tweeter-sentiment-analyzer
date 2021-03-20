@@ -18,7 +18,7 @@ func main() {
 
 	cpuNumber := runtime.NumCPU()
 	runtime.GOMAXPROCS(cpuNumber)
-	if err := actor_model.RunApp(mainRouterStruct.Routes[:2]); err != nil {
+	if err = actor_model.RunApp(mainRouterStruct.Routes[:2]); err != nil {
 		log.Println("error occurred after running app:", err)
 	}
 
