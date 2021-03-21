@@ -39,5 +39,5 @@ type User struct {
 	URL                            interface{} `json:"url"`
 	UtcOffset                      interface{} `json:"utc_offset"`
 	Verified                       bool        `json:"verified"`
-	UniqueId                       string      `json:"unique_id,omitempty" bson:"-"`
+	UniqueId                       string      `json:"_id,omitempty" bson:"_id,omitempty"`
 }

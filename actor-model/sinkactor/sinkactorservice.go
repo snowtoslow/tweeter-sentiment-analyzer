@@ -10,6 +10,7 @@ import (
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 	"tweeter-sentiment-analyzer/actor-model/actorregistry"
 	"tweeter-sentiment-analyzer/constants"
+	"tweeter-sentiment-analyzer/models"
 )
 
 func NewSinkActor(actorName string) actorabstraction.IActor {
@@ -42,13 +43,14 @@ func (sinkActor *SinkActor) ActorLoop() {
 	for {
 		select {
 		case action := <-sinkActor.ActorProps.ChanToReceiveData:
-			if fmt.Sprintf("%T", action) == "models.User" {
-				sinkActor.sinkBuffer["users"] = append(sinkActor.sinkBuffer["users"], action)
+			if fmt.Sprintf("%T", action) == constants.UserModel {
+				log.Println(action.(models.User).UniqueId)
+				sinkActor.sinkBuffer[constants.UserCollection] = append(sinkActor.sinkBuffer[constants.UserCollection], action)
 			} else if fmt.Sprintf("%T", action) == constants.JsonNameOfStruct || fmt.Sprintf("%T", action) == constants.RetweetedStatus {
-				sinkActor.sinkBuffer["tweets"] = append(sinkActor.sinkBuffer["tweets"], action)
+				sinkActor.sinkBuffer[constants.TweetsCollection] = append(sinkActor.sinkBuffer[constants.TweetsCollection], action)
 			}
 
-			if len(sinkActor.sinkBuffer["users"])+len(sinkActor.sinkBuffer["tweets"]) == 128 {
+			if len(sinkActor.sinkBuffer[constants.UserCollection])+len(sinkActor.sinkBuffer[constants.TweetsCollection]) == 128 {
 				log.Println("full buffer!")
 				if err = sinkActor.insertAndClear(mongoClient); err != nil {
 					log.Fatal(err)
@@ -56,7 +58,7 @@ func (sinkActor *SinkActor) ActorLoop() {
 				ticker.Reset(constants.TickerInterval)
 			}
 		case <-ticker.C:
-			log.Println("after 200ms:", len(sinkActor.sinkBuffer["users"])+len(sinkActor.sinkBuffer["tweets"]))
+			//log.Println("after 200ms:", len(sinkActor.sinkBuffer[constants.UserCollection])+len(sinkActor.sinkBuffer[constants.TweetsCollection]))
 			if err = sinkActor.insertAndClear(mongoClient); err != nil {
 				log.Fatal(err)
 			}
@@ -68,12 +70,12 @@ func (sinkActor *SinkActor) insertAndClear(mongoClient *mongo.Client) (errorOccu
 	myArray := sinkActor.sinkBuffer
 	for k, v := range myArray {
 		go func(k string, v []interface{}) {
-			if k == "users" {
+			if k == constants.UserCollection {
 				if _, err := mongoClient.Database(constants.DatabaseName).Collection(constants.UserCollection).InsertMany(context.Background(), v); err != nil {
 					errorOccurredInInsert = err
 					log.Fatal("FATAL ERROR INSERTING USERS:", err)
 				}
-			} else if k == "tweets" {
+			} else if k == constants.TweetsCollection {
 				if _, err := mongoClient.Database(constants.DatabaseName).Collection(constants.TweetsCollection).InsertMany(context.Background(), v); err != nil {
 					errorOccurredInInsert = err
 					log.Fatal("FATAL ERROR INSERTING TWEETS:", err)
@@ -82,9 +84,9 @@ func (sinkActor *SinkActor) insertAndClear(mongoClient *mongo.Client) (errorOccu
 		}(k, v)
 	}
 
-	sinkActor.sinkBuffer["users"] = sinkActor.sinkBuffer["users"][:0]
-	sinkActor.sinkBuffer["tweets"] = sinkActor.sinkBuffer["tweets"][:0]
-	//sinkActor.sinkBuffer = make(map[string][]interface{})
+	/*sinkActor.sinkBuffer[constants.UserCollection] = sinkActor.sinkBuffer[constants.UserCollection][:0]
+	sinkActor.sinkBuffer[constants.TweetsCollection] = sinkActor.sinkBuffer[constants.TweetsCollection][:0]*/
+	sinkActor.sinkBuffer = make(map[string][]interface{})
 	return
 }
 

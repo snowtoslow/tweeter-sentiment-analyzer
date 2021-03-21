@@ -39,5 +39,6 @@ type MyJsonName struct {
 		UniqueId           string  `json:"unique_id,omitempty" bson:"-"`
 		AggregationRation  float64 `json:"aggregation_ration,omitempty"`
 		SentimentSCore     int8    `json:"sentiment_s_core,omitempty"`
+		UserId             string  `json:"user_id,omitempty"`
 	} `json:"message"`
 }

@@ -34,4 +34,5 @@ type RetweetedStatus struct {
 	AggregationRation    float64     `json:"aggregation_ration,omitempty"`
 	SentimentSCore       int8        `json:"sentiment_s_core,omitempty"`
 	FavouritesCount      int64       `json:"favourites_count"`
+	UserId               string      `json:"user_id,omitempty"`
 }

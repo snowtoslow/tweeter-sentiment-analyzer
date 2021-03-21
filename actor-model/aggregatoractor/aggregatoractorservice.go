@@ -44,12 +44,12 @@ func (aggregatorActor *AggregatorActor) ActorLoop() {
 
 func (aggregatorActor *AggregatorActor) addTweetFields(action interface{}) {
 	var myVal interface{}
-	if fmt.Sprintf("%T", action) == "*models.EngagementRation" {
+	if fmt.Sprintf("%T", action) == constants.EngagementRatio {
 		if val, ok := aggregatorActor.StorageToAggregateTweets[action.(*models.EngagementRation).UniqueId]; ok {
 			aggregatorActor.addEngRation(val, action.(*models.EngagementRation).Ratio)
 			myVal = val
 		}
-	} else if fmt.Sprintf("%T", action) == "*models.SentimentAnalysis" {
+	} else if fmt.Sprintf("%T", action) == constants.SentimentAnalysis {
 		if val, ok := aggregatorActor.StorageToAggregateTweets[action.(*models.SentimentAnalysis).UniqueId]; ok {
 			aggregatorActor.addSentimentAnalysis(val, action.(*models.SentimentAnalysis).Score)
 			myVal = val
@@ -68,7 +68,7 @@ func (aggregatorActor *AggregatorActor) extractAndSendUserByInterfaceType(value 
 }
 
 func (aggregatorActor *AggregatorActor) getIdByInterfaceType(value interface{}) (keyId string) {
-	if fmt.Sprintf("%T", value) == "*models.RetweetedStatus" {
+	if fmt.Sprintf("%T", value) == constants.RetweetedStatusPointer {
 		keyId = value.(*models.RetweetedStatus).UniqueId
 	} else if fmt.Sprintf("%T", value) == constants.JsonNameOfStruct {
 		keyId = value.(*models.MyJsonName).Message.UniqueId
@@ -77,7 +77,7 @@ func (aggregatorActor *AggregatorActor) getIdByInterfaceType(value interface{}) 
 }
 
 func (aggregatorActor *AggregatorActor) addEngRation(val interface{}, engRatio float64) {
-	if fmt.Sprintf("%T", val) == "*models.RetweetedStatus" {
+	if fmt.Sprintf("%T", val) == constants.RetweetedStatusPointer {
 		val.(*models.RetweetedStatus).AggregationRation = engRatio
 	} else if fmt.Sprintf("%T", val) == constants.JsonNameOfStruct {
 		val.(*models.MyJsonName).Message.AggregationRation = engRatio
@@ -85,7 +85,7 @@ func (aggregatorActor *AggregatorActor) addEngRation(val interface{}, engRatio f
 }
 
 func (aggregatorActor *AggregatorActor) addSentimentAnalysis(val interface{}, sentScore int8) {
-	if fmt.Sprintf("%T", val) == "*models.RetweetedStatus" {
+	if fmt.Sprintf("%T", val) == constants.RetweetedStatusPointer {
 		val.(*models.RetweetedStatus).SentimentSCore = sentScore
 	} else if fmt.Sprintf("%T", val) == constants.JsonNameOfStruct {
 		val.(*models.MyJsonName).Message.SentimentSCore = sentScore

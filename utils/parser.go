@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"os/exec"
+	"os"
 	"strings"
 	"tweeter-sentiment-analyzer/actor-model/message-types"
 	"tweeter-sentiment-analyzer/constants"
@@ -81,11 +81,35 @@ func GetActorPollNameByActorIdentity(identity string) (actorPollName string) {
 	return
 }
 
-//works only for linux systems!
 func GenerateUuidgen() string {
-	out, err := exec.Command("uuidgen").Output()
+	f, err := os.Open(constants.NameOfFileToGenerateRandomUuid)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("ERROR OPENING FILE " + constants.NameOfFileToGenerateRandomUuid)
 	}
-	return fmt.Sprintf("%s", out)
+	b := make([]byte, 16)
+	if _, err = f.Read(b); err != nil {
+		log.Fatal("ERROR READING FROM FILE: " + constants.NameOfFileToGenerateRandomUuid)
+	}
+	f.Close()
+	uuid := fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
+	fmt.Println(uuid)
+	return uuid
 }
+
+//If someone somewhere at a specific moment of time in our magicGalactic will try to run myMagicProgram and previous method wouldn't work,
+//Comment lines 84 - 96 and uncomment from 101 - 115;
+/*func GenerateUuidgen() (uuid string) {
+
+	b := make([]byte, 16)
+	_, err := rand.Read(b)
+	if err != nil {
+		fmt.Println("Error: ", err)
+		return
+	}
+
+	uuid = fmt.Sprintf("%X-%X-%X-%X-%X", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
+	log.Println(uuid)
+
+
+	return
+}*/
