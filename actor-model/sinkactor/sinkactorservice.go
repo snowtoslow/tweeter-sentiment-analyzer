@@ -10,7 +10,6 @@ import (
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 	"tweeter-sentiment-analyzer/actor-model/actorregistry"
 	"tweeter-sentiment-analyzer/constants"
-	"tweeter-sentiment-analyzer/models"
 )
 
 func NewSinkActor(actorName string) actorabstraction.IActor {
@@ -37,14 +36,12 @@ func (sinkActor *SinkActor) ActorLoop() {
 	mongoClient, err := mongo.Connect(context.Background(), options.Client().ApplyURI(constants.ClusterDatabaseAddress))
 	if err != nil {
 		log.Fatal(err)
-		return
 	}
 
 	for {
 		select {
 		case action := <-sinkActor.ActorProps.ChanToReceiveData:
 			if fmt.Sprintf("%T", action) == constants.UserModel {
-				log.Println(action.(models.User).UniqueId)
 				sinkActor.sinkBuffer[constants.UserCollection] = append(sinkActor.sinkBuffer[constants.UserCollection], action)
 			} else if fmt.Sprintf("%T", action) == constants.JsonNameOfStruct || fmt.Sprintf("%T", action) == constants.RetweetedStatus {
 				sinkActor.sinkBuffer[constants.TweetsCollection] = append(sinkActor.sinkBuffer[constants.TweetsCollection], action)
@@ -58,7 +55,7 @@ func (sinkActor *SinkActor) ActorLoop() {
 				ticker.Reset(constants.TickerInterval)
 			}
 		case <-ticker.C:
-			//log.Println("after 200ms:", len(sinkActor.sinkBuffer[constants.UserCollection])+len(sinkActor.sinkBuffer[constants.TweetsCollection]))
+			log.Println("after 200ms:", len(sinkActor.sinkBuffer[constants.UserCollection])+len(sinkActor.sinkBuffer[constants.TweetsCollection]))
 			if err = sinkActor.insertAndClear(mongoClient); err != nil {
 				log.Fatal(err)
 			}
