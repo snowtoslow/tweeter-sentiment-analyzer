@@ -48,14 +48,14 @@ func (sinkActor *SinkActor) ActorLoop() {
 			}
 
 			if len(sinkActor.sinkBuffer[constants.UserCollection])+len(sinkActor.sinkBuffer[constants.TweetsCollection]) == 128 {
-				log.Println("full buffer!")
+				log.Println("Buffer len is full:", len(sinkActor.sinkBuffer[constants.UserCollection])+len(sinkActor.sinkBuffer[constants.TweetsCollection]))
 				if err = sinkActor.insertAndClear(mongoClient); err != nil {
 					log.Fatal(err)
 				}
 				ticker.Reset(constants.TickerInterval)
 			}
 		case <-ticker.C:
-			log.Println("after 200ms:", len(sinkActor.sinkBuffer[constants.UserCollection])+len(sinkActor.sinkBuffer[constants.TweetsCollection]))
+			log.Println("Buffer length after 200ms:", len(sinkActor.sinkBuffer[constants.UserCollection])+len(sinkActor.sinkBuffer[constants.TweetsCollection]))
 			if err = sinkActor.insertAndClear(mongoClient); err != nil {
 				log.Fatal(err)
 			}
