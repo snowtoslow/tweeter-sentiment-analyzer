@@ -13,7 +13,7 @@ func main() {
 
 	mainRouterStruct, err := utils.GetRoutes(constants.EndPointToTrigger)
 	if err != nil {
-		log.Println("ERR OCCURED:", err)
+		log.Println("ERR OCCURRED:", err)
 	}
 
 	cpuNumber := runtime.NumCPU()

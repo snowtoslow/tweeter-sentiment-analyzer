@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 	"tweeter-sentiment-analyzer/actor-model/actorregistry"
+	"tweeter-sentiment-analyzer/actor-model/clientactor"
 	"tweeter-sentiment-analyzer/actor-model/sinkactor"
 	"tweeter-sentiment-analyzer/constants"
 	"tweeter-sentiment-analyzer/models"
@@ -56,14 +57,17 @@ func (aggregatorActor *AggregatorActor) addTweetFields(action interface{}) {
 		}
 	}
 	actorregistry.MyActorRegistry.FindActorByName("sinkActor").(*sinkactor.SinkActor).SendMessage(myVal)
+	actorregistry.MyActorRegistry.FindActorByName("clientActor").(*clientactor.ClientActor).SendMessage(myVal)
 	delete(aggregatorActor.StorageToAggregateTweets, aggregatorActor.getIdByInterfaceType(myVal))
 }
 
 func (aggregatorActor *AggregatorActor) extractAndSendUserByInterfaceType(value interface{}) {
 	if fmt.Sprintf("%T", value) == constants.JsonNameOfStruct {
 		actorregistry.MyActorRegistry.FindActorByName("sinkActor").(*sinkactor.SinkActor).SendMessage(value.(*models.MyJsonName).Message.Tweet.User)
+		actorregistry.MyActorRegistry.FindActorByName("clientActor").(*clientactor.ClientActor).SendMessage(value.(*models.MyJsonName).Message.Tweet.User) //send user to client
 	} else if fmt.Sprintf("%T", value) == constants.RetweetedStatus {
 		actorregistry.MyActorRegistry.FindActorByName("sinkActor").(*sinkactor.SinkActor).SendMessage(value.(models.RetweetedStatus).User)
+		actorregistry.MyActorRegistry.FindActorByName("clientActor").(*clientactor.ClientActor).SendMessage(value.(models.RetweetedStatus).User) //send user to client
 	}
 }
 

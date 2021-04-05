@@ -2,7 +2,6 @@ package workeractor
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
@@ -42,7 +41,7 @@ func (actor *Actor) ActorLoop() {
 			//add unique id to user from extracted tweet:
 			action.(*models.MyJsonName).Message.Tweet.User.UniqueId = generatedId
 			action.(*models.MyJsonName).Message.UserId = generatedId
-			log.Printf("Unique id which is used to recombine messages and to be considered as user id at insertion: %s", generatedId)
+			//log.Printf("Unique id which is used to recombine messages and to be considered as user id at insertion: %s", generatedId)
 			actorregistry.MyActorRegistry.FindActorByName("aggregatorActor").(*aggregatoractor.AggregatorActor).SendMessage(action)
 			actor.delegateWork(action.(*models.MyJsonName).Message.Tweet.Text,
 				action.(*models.MyJsonName).Message.Tweet.RetweetedStatus,
@@ -60,13 +59,13 @@ func (actor *Actor) ActorLoop() {
 }
 
 func (actor *Actor) extractSubTweetsAndAnalyze(mainTweet interface{}) {
-	log.Println("Extract tweets!")
+	// log.Println("Extract tweets!")
 	generatedId := utils.GenerateUuidgen()
 	mainTweet.(*models.MyJsonName).Message.Tweet.RetweetedStatus.UniqueId = generatedId
 	//add unique id to user from extracted tweet:
 	mainTweet.(*models.MyJsonName).Message.Tweet.RetweetedStatus.User.UniqueId = generatedId
 	mainTweet.(*models.MyJsonName).Message.Tweet.RetweetedStatus.UserId = generatedId
-	log.Printf("Unique id which is used to recombine messages and to be considered as user id at insertion: %s", generatedId)
+	//log.Printf("Unique id which is used to recombine messages and to be considered as user id at insertion: %s", generatedId)
 	actorregistry.MyActorRegistry.FindActorByName("aggregatorActor").(*aggregatoractor.AggregatorActor).SendMessage(mainTweet.(*models.MyJsonName).Message.Tweet.RetweetedStatus)
 	actor.delegateWork(mainTweet.(*models.MyJsonName).Message.Tweet.RetweetedStatus.Text,
 		mainTweet.(*models.MyJsonName).Message.Tweet.RetweetedStatus,
@@ -77,19 +76,19 @@ func (actor *Actor) extractSubTweetsAndAnalyze(mainTweet interface{}) {
 
 func (actor *Actor) delegateWork(textForSentimentAnalysis string, retweetedStatus models.RetweetedStatus, favCount int64, followersCount int64, generatedId string) {
 	if strings.Contains(actor.ActorProps.Identity, constants.SentimentActorPool) {
-		log.Println("score and unique id for recombination:", &models.SentimentAnalysis{
+		/*log.Println("score and unique id for recombination:", &models.SentimentAnalysis{
 			Score:    utils.AnalyzeSentiments(textForSentimentAnalysis),
 			UniqueId: generatedId,
-		})
+		})*/
 		actorregistry.MyActorRegistry.FindActorByName("aggregatorActor").(*aggregatoractor.AggregatorActor).SendMessage(&models.SentimentAnalysis{
 			Score:    utils.AnalyzeSentiments(textForSentimentAnalysis),
 			UniqueId: generatedId,
 		})
 	} else if strings.Contains(actor.ActorProps.Identity, constants.AggregationActorPool) {
-		log.Println("unique id and engagement ratio:", &models.EngagementRation{
+		/*log.Println("unique id and engagement ratio:", &models.EngagementRation{
 			Ratio:    utils.EngagementRatio(retweetedStatus, favCount, followersCount),
 			UniqueId: generatedId,
-		})
+		})*/
 		actorregistry.MyActorRegistry.FindActorByName("aggregatorActor").(*aggregatoractor.AggregatorActor).SendMessage(&models.EngagementRation{
 			Ratio:    utils.EngagementRatio(retweetedStatus, favCount, followersCount),
 			UniqueId: generatedId,

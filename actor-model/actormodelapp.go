@@ -3,6 +3,7 @@ package actor_model
 import (
 	"tweeter-sentiment-analyzer/actor-model/aggregatoractor"
 	"tweeter-sentiment-analyzer/actor-model/autoscaleractor"
+	"tweeter-sentiment-analyzer/actor-model/clientactor"
 	"tweeter-sentiment-analyzer/actor-model/connectionactor"
 	"tweeter-sentiment-analyzer/actor-model/dynamicsupervisor"
 	"tweeter-sentiment-analyzer/actor-model/routeractor"
@@ -25,6 +26,8 @@ func RunApp(arr []string) error {
 	_ = aggregatoractor.NewAggregatorActor("aggregator")
 
 	_ = sinkactor.NewSinkActor("sink")
+
+	_ = clientactor.NewClientActor("client")
 
 	connectionMaker.ActorLoop()
 
