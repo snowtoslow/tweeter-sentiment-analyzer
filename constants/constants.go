@@ -25,4 +25,8 @@ const (
 	EngagementRatio                = "*models.EngagementRation"
 	SentimentAnalysis              = "*models.SentimentAnalysis"
 	NameOfFileToGenerateRandomUuid = "/dev/urandom"
+
+	///TOPICS
+	TweetsTopic = "tweetsTopic"
+	UserTopic   = "usersTopic"
 )
