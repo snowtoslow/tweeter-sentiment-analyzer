@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"log"
 	"net"
@@ -9,15 +8,16 @@ import (
 )
 
 type Server struct {
-	connection net.Conn
-	clients    map[string]*Client
-	counter    int
+	connection  net.Conn
+	clients     []*Client
+	counter     int
+	actorClient *Client
 }
 
 func NewServer(connection net.Conn) *Server {
 	return &Server{
 		connection: connection,
-		clients:    map[string]*Client{},
+		clients:    []*Client{},
 	}
 }
 
@@ -27,7 +27,7 @@ func (server *Server) RunServer(port string) error {
 		fmt.Println("Error listening:", err.Error())
 		os.Exit(1)
 	}
-	// Close the listener when the application closes.
+
 	defer l.Close()
 	for {
 		// Listen for an incoming connection.
@@ -42,27 +42,21 @@ func (server *Server) RunServer(port string) error {
 }
 
 func (server *Server) handleRequest(conn net.Conn) {
-	// Make a buffer to hold incoming data.
 	log.Println("CONECTED!")
 	server.counter++
-	server.clients[conn.RemoteAddr().String()] = NewClient(conn)
-	for {
-		netData, err := bufio.NewReader(conn).ReadString('\n')
-		if err != nil {
-			log.Fatal("Error reading: ", err)
+	if server.counter == 1 {
+		server.actorClient = NewClient(conn, "mainClientSendMsg")
+		go server.actorClient.read()
+	} else if server.counter > 1 {
+		log.Println("here")
+		server.clients = append(server.clients, NewClient(conn, fmt.Sprintf("client_%d", len(server.clients))))
+		for i := 0; i < len(server.clients); i++ {
+			/*go server.clients[i].read()
+			go server.clients[i].write(server.actorClient.outgoing)*/
+			log.Println(i)
+			server.clients[i].Listen(server.actorClient.outgoing)
+			//server.clients[i].Listen(server.actorClient.outgoing)
 		}
-		/*myInput := strings.TrimSpace(netData)
-
-		if strings.TrimSpace(netData) == "topicUsers" {
-			log.Println("CAPTURED!")
-		}*/
-		v, ok := server.clients[conn.RemoteAddr().String()]
-		if ok {
-			v.outgoing <- netData
-			v.read()
-		}
-
-		//fmt.Println(conn.RemoteAddr().String())
 	}
-	conn.Close()
+
 }

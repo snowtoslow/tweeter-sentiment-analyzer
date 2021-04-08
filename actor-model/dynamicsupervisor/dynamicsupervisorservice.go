@@ -97,7 +97,7 @@ func (dynamicSupervisor *DynamicSupervisor) SendErrMessage(msg interface{}) {
 	dynamicSupervisor.ActorProps.ChanToReceiveData <- msg
 }
 
-//reusi this function for two arrays and reuse it
+//reuse this function for two arrays and reuse it
 func (dynamicSupervisor *DynamicSupervisor) addActors(numberOfActors int, poolName string) {
 	for i := 0; i < numberOfActors; i++ {
 		*actorregistry.MyActorRegistry.FindActorByName(poolName).(*[]actorabstraction.IActor) =
@@ -150,11 +150,15 @@ func (dynamicSupervisor *DynamicSupervisor) pushRecreatedWorkingActorToArray(rec
 }
 
 func (dynamicSupervisor *DynamicSupervisor) sendToRouter(myChan chan interface{}) {
-	go func() {
+	//changes here
+	/*go func() {
 		for msg := range myChan {
 			actorregistry.MyActorRegistry.FindActorByName("routerActor").(*routeractor.RouterActor).SendMessage(msg)
 		}
-	}()
+	}()*/
+	for msg := range myChan {
+		actorregistry.MyActorRegistry.FindActorByName("routerActor").(*routeractor.RouterActor).SendMessage(msg)
+	}
 }
 
 func (dynamicSupervisor *DynamicSupervisor) collectDataOfActorsToBeDroppedToSingleChan(numberOfActors int, poolName string) chan interface{} {

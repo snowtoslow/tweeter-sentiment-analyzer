@@ -31,17 +31,17 @@ func NewClientActor(actorName string) actorabstraction.IActor {
 }
 
 func (clientActor *ClientActor) ActorLoop() {
+	defer close(clientActor.ActorProps.ChanToReceiveData)
 	conn, err := clientActor.Connection.Dial("tcp", "localhost:8088")
 	if err != nil {
 		log.Println("Error during connection to broker: ", err)
 		return
 	}
-
-	defer close(clientActor.ActorProps.ChanToReceiveData)
+	defer conn.Close() // maybe budet kakaeato xueta
 	for {
 		select {
 		case action := <-clientActor.ActorProps.ChanToReceiveData:
-			if err := clientActor.sendBrokerMessageToBroker(action, conn); err != nil {
+			if err = clientActor.sendBrokerMessageToBroker(action, conn); err != nil {
 				log.Printf("Error during writing messages to broker: %s", err)
 				return
 			}
@@ -63,7 +63,7 @@ func (clientActor *ClientActor) sendBrokerMessageToBroker(action interface{}, co
 		log.Println("Error during writing to server: ", err)
 		return
 	} else {
-		log.Println("continue sending!")
+		log.Println("msg send")
 	}
 	return
 }
