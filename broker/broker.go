@@ -45,17 +45,17 @@ func (server *Server) handleRequest(conn net.Conn) {
 	log.Println("CONECTED!")
 	server.counter++
 	if server.counter == 1 {
-		server.actorClient = NewClient(conn, "mainClientSendMsg")
+		server.actorClient = NewClient(conn, "actorClient")
 		go server.actorClient.read()
 	} else if server.counter > 1 {
 		log.Println("here")
 		server.clients = append(server.clients, NewClient(conn, fmt.Sprintf("client_%d", len(server.clients))))
 		for i := 0; i < len(server.clients); i++ {
-			/*go server.clients[i].read()
-			go server.clients[i].write(server.actorClient.outgoing)*/
-			log.Println(i)
 			server.clients[i].Listen(server.actorClient.outgoing)
-			//server.clients[i].Listen(server.actorClient.outgoing)
+			/*delete(server.clients, server.clients[i])
+			if server.clients[i] != nil {
+				server.clients[i].connection = nil
+			}*/
 		}
 	}
 

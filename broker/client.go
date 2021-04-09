@@ -46,17 +46,21 @@ func (client *Client) read() {
 		//log.Printf("client:%s -> line last: %v -> len bytest(%d) -> (%s)",client.connection.RemoteAddr(),[]byte(line)[len([]byte(line))-1],len([]byte(line)),line)
 		if err == nil {
 			if client.connection != nil {
-				client.outgoing <- line
+				//we use here a goroutine because our unbuffered chan block, because there is no a client which read messages from unbuffered chan
+				//If the channel is unbuffered, the sender blocks until the receiver has received the value -> from doc
+				go func() {
+					client.outgoing <- line
+				}()
+				/*client.outgoing <- line <= main case without a separate goroutine for blocked chans which is waiting from reading from; */
 			} else {
-				log.Println("nil")
+				break
 			}
-
-		} else {
-			log.Println("ERR", err)
-			break
 		}
 	}
-
+	err := client.connection.Close()
+	if err != nil {
+		log.Println("err:", err)
+	}
 }
 
 func (client *Client) write(ch <-chan string) {

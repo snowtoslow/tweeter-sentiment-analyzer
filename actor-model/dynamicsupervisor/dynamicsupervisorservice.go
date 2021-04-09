@@ -150,15 +150,14 @@ func (dynamicSupervisor *DynamicSupervisor) pushRecreatedWorkingActorToArray(rec
 }
 
 func (dynamicSupervisor *DynamicSupervisor) sendToRouter(myChan chan interface{}) {
-	//changes here
-	/*go func() {
+	go func() {
 		for msg := range myChan {
 			actorregistry.MyActorRegistry.FindActorByName("routerActor").(*routeractor.RouterActor).SendMessage(msg)
 		}
-	}()*/
-	for msg := range myChan {
+	}()
+	/*for msg := range myChan {
 		actorregistry.MyActorRegistry.FindActorByName("routerActor").(*routeractor.RouterActor).SendMessage(msg)
-	}
+	}*/
 }
 
 func (dynamicSupervisor *DynamicSupervisor) collectDataOfActorsToBeDroppedToSingleChan(numberOfActors int, poolName string) chan interface{} {
