@@ -6,9 +6,9 @@ import (
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 	"tweeter-sentiment-analyzer/actor-model/actorregistry"
 	"tweeter-sentiment-analyzer/actor-model/autoscaleractor"
+	"tweeter-sentiment-analyzer/actor-model/constants"
 	"tweeter-sentiment-analyzer/actor-model/routeractor"
-	"tweeter-sentiment-analyzer/constants"
-	"tweeter-sentiment-analyzer/utils"
+	"tweeter-sentiment-analyzer/actor-model/utils"
 )
 
 func NewConnectionActor(actorName string, routes []string) actorabstraction.IActor {

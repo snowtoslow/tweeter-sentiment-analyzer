@@ -5,9 +5,9 @@ import (
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 	"tweeter-sentiment-analyzer/actor-model/actorregistry"
 	"tweeter-sentiment-analyzer/actor-model/clientactor"
+	"tweeter-sentiment-analyzer/actor-model/constants"
+	"tweeter-sentiment-analyzer/actor-model/models"
 	"tweeter-sentiment-analyzer/actor-model/sinkactor"
-	"tweeter-sentiment-analyzer/constants"
-	"tweeter-sentiment-analyzer/models"
 )
 
 func NewAggregatorActor(actorName string) actorabstraction.IActor {

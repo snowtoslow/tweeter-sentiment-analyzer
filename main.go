@@ -4,8 +4,8 @@ import (
 	"log"
 	"runtime"
 	actor_model "tweeter-sentiment-analyzer/actor-model"
-	"tweeter-sentiment-analyzer/constants"
-	"tweeter-sentiment-analyzer/utils"
+	"tweeter-sentiment-analyzer/actor-model/constants"
+	"tweeter-sentiment-analyzer/actor-model/utils"
 )
 
 func main() {

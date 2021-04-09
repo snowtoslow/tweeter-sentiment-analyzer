@@ -7,10 +7,10 @@ import (
 	"math"
 	"os"
 	"strings"
+	"tweeter-sentiment-analyzer/actor-model/constants"
 	"tweeter-sentiment-analyzer/actor-model/message-types"
-	"tweeter-sentiment-analyzer/constants"
-	"tweeter-sentiment-analyzer/models"
-	"tweeter-sentiment-analyzer/sentiments"
+	"tweeter-sentiment-analyzer/actor-model/models"
+	"tweeter-sentiment-analyzer/actor-model/sentiments"
 )
 
 func CreateMessageType(processedString string) interface{} {

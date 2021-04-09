@@ -7,8 +7,8 @@ import (
 	"net"
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 	"tweeter-sentiment-analyzer/actor-model/actorregistry"
-	"tweeter-sentiment-analyzer/constants"
-	"tweeter-sentiment-analyzer/models"
+	"tweeter-sentiment-analyzer/actor-model/constants"
+	"tweeter-sentiment-analyzer/actor-model/models"
 )
 
 func NewClientActor(actorName string) actorabstraction.IActor {
@@ -34,7 +34,7 @@ func (clientActor *ClientActor) ActorLoop() {
 	defer close(clientActor.ActorProps.ChanToReceiveData)
 	conn, err := clientActor.Connection.Dial("tcp", "localhost:8088")
 	if err != nil {
-		log.Println("Error during connection to broker: ", err)
+		log.Println("Error during connection to message-broker: ", err)
 		return
 	}
 	defer conn.Close() // maybe budet kakaeato xueta
@@ -42,7 +42,7 @@ func (clientActor *ClientActor) ActorLoop() {
 		select {
 		case action := <-clientActor.ActorProps.ChanToReceiveData:
 			if err = clientActor.sendBrokerMessageToBroker(action, conn); err != nil {
-				log.Printf("Error during writing messages to broker: %s", err)
+				log.Printf("Error during writing messages to message-broker: %s", err)
 				return
 			}
 		}

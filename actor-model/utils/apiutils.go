@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 	"tweeter-sentiment-analyzer/actor-model/actorregistry"
-	"tweeter-sentiment-analyzer/models"
+	"tweeter-sentiment-analyzer/actor-model/models"
 )
 
 func GetRoutes(address string) (mainRoutes *models.MainRouteMsg, err error) {

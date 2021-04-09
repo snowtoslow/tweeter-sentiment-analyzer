@@ -1,7 +1,7 @@
 package models
 
 import (
-	"tweeter-sentiment-analyzer/constants"
+	"tweeter-sentiment-analyzer/actor-model/constants"
 )
 
 type UserTopic string

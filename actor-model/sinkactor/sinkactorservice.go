@@ -9,7 +9,7 @@ import (
 	"time"
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 	"tweeter-sentiment-analyzer/actor-model/actorregistry"
-	"tweeter-sentiment-analyzer/constants"
+	"tweeter-sentiment-analyzer/actor-model/constants"
 )
 
 func NewSinkActor(actorName string) actorabstraction.IActor {

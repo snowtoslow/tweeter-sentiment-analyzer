@@ -7,10 +7,10 @@ import (
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 	"tweeter-sentiment-analyzer/actor-model/actorregistry"
 	"tweeter-sentiment-analyzer/actor-model/aggregatoractor"
+	"tweeter-sentiment-analyzer/actor-model/constants"
 	message_types "tweeter-sentiment-analyzer/actor-model/message-types"
-	"tweeter-sentiment-analyzer/constants"
-	"tweeter-sentiment-analyzer/models"
-	"tweeter-sentiment-analyzer/utils"
+	"tweeter-sentiment-analyzer/actor-model/models"
+	"tweeter-sentiment-analyzer/actor-model/utils"
 )
 
 func NewActor(actorName string, dynamicSup IDynamicSupervisor) actorabstraction.IActor {

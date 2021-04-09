@@ -2,4 +2,4 @@
 .bin
 vendor
 test.go
-back-up.txt
+back-up-txt-files/*

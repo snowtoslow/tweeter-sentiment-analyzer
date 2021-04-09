@@ -5,11 +5,11 @@ import (
 	"strconv"
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 	"tweeter-sentiment-analyzer/actor-model/actorregistry"
+	"tweeter-sentiment-analyzer/actor-model/constants"
 	message_types "tweeter-sentiment-analyzer/actor-model/message-types"
 	"tweeter-sentiment-analyzer/actor-model/routeractor"
+	"tweeter-sentiment-analyzer/actor-model/utils"
 	"tweeter-sentiment-analyzer/actor-model/workeractor"
-	"tweeter-sentiment-analyzer/constants"
-	"tweeter-sentiment-analyzer/utils"
 )
 
 func NewDynamicSupervisor(actorName string) (actorabstraction.IActor, error) {

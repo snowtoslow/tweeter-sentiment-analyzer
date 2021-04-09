@@ -3,8 +3,8 @@ package routeractor
 import (
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 	"tweeter-sentiment-analyzer/actor-model/actorregistry"
+	"tweeter-sentiment-analyzer/actor-model/constants"
 	"tweeter-sentiment-analyzer/actor-model/routerstrategy"
-	"tweeter-sentiment-analyzer/constants"
 )
 
 func NewRouterActor(actorName string) actorabstraction.IActor {
