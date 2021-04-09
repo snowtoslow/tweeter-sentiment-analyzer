@@ -9,7 +9,7 @@ import (
 
 type Server struct {
 	connection  net.Conn
-	clients     []*Client
+	clients     map[string]*Client
 	counter     int
 	actorClient *Client
 }
@@ -17,7 +17,7 @@ type Server struct {
 func NewServer(connection net.Conn) *Server {
 	return &Server{
 		connection: connection,
-		clients:    []*Client{},
+		clients:    make(map[string]*Client),
 	}
 }
 
@@ -48,14 +48,10 @@ func (server *Server) handleRequest(conn net.Conn) {
 		server.actorClient = NewClient(conn, "actorClient")
 		go server.actorClient.read()
 	} else if server.counter > 1 {
-		log.Println("here")
-		server.clients = append(server.clients, NewClient(conn, fmt.Sprintf("client_%d", len(server.clients))))
-		for i := 0; i < len(server.clients); i++ {
-			server.clients[i].Listen(server.actorClient.outgoing)
-			/*delete(server.clients, server.clients[i])
-			if server.clients[i] != nil {
-				server.clients[i].connection = nil
-			}*/
+		log.Println("remote address of new connection:", conn.RemoteAddr().String())
+		server.clients[conn.RemoteAddr().String()] = NewClient(conn, fmt.Sprintf("client_%d", server.counter))
+		for _, v := range server.clients {
+			v.Listen(server.actorClient.outgoing)
 		}
 	}
 

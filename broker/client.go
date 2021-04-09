@@ -9,12 +9,11 @@ import (
 )
 
 type Client struct {
-	outgoing      chan string
-	reader        *bufio.Reader
-	writer        *bufio.Writer
-	remoteAddress string
-	connection    net.Conn
-	name          string
+	outgoing   chan string
+	reader     *bufio.Reader
+	writer     *bufio.Writer
+	connection net.Conn
+	name       string
 }
 
 func NewClient(connection net.Conn, name string) *Client {
@@ -22,12 +21,11 @@ func NewClient(connection net.Conn, name string) *Client {
 	reader := bufio.NewReader(connection)
 
 	client := &Client{
-		outgoing:      make(chan string),
-		connection:    connection,
-		reader:        reader,
-		writer:        writer,
-		remoteAddress: connection.RemoteAddr().String(),
-		name:          name,
+		outgoing:   make(chan string),
+		connection: connection,
+		reader:     reader,
+		writer:     writer,
+		name:       name,
 	}
 
 	return client
