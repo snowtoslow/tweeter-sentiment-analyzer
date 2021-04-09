@@ -1,0 +1,21 @@
+version: "3.9"
+
+services:
+  actorsystem:
+    build:
+      context: actor-model
+      dockerfile: Dockerfile
+    depends_on:
+      - rtpserver
+      - messagebroker
+  rtpserver:
+    image: alexburlacu/rtp-server:faf18x
+    ports:
+      - "4000:4000"
+  messagebroker:
+    build:
+      context: message-broker
+      dockerfile: Dockerfile
+    ports:
+      - "8088:8088"
+

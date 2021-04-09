@@ -1,4 +1,4 @@
-package actor_model
+package actorsystem
 
 import (
 	"tweeter-sentiment-analyzer/actor-model/aggregatoractor"

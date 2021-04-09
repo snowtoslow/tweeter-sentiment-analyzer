@@ -23,6 +23,7 @@ func NewBroker(connection net.Conn) *Broker {
 }
 
 func (server *Broker) RunBroker(port string) error {
+	log.Println("Start broker:")
 	l, err := net.Listen("tcp", port)
 	if err != nil {
 		fmt.Println("Error listening:", err.Error())
