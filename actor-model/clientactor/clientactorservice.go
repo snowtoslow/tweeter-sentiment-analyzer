@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 	"tweeter-sentiment-analyzer/actor-model/actorregistry"
 	"tweeter-sentiment-analyzer/actor-model/constants"
@@ -32,7 +33,7 @@ func NewClientActor(actorName string) actorabstraction.IActor {
 
 func (clientActor *ClientActor) ActorLoop() {
 	defer close(clientActor.ActorProps.ChanToReceiveData)
-	conn, err := clientActor.Connection.Dial("tcp", "localhost:8088")
+	conn, err := clientActor.Connection.Dial("tcp", os.Getenv("BROKER_URL")) // change here from "localhost:8088"
 	if err != nil {
 		log.Println("Error during connection to message-broker: ", err)
 		return

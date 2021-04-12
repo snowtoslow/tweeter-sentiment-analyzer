@@ -9,3 +9,10 @@
 2. Link to video with output result of second laboratory work:
 
    https://drive.google.com/drive/folders/1jlEr2jJOYAcp1Nka_7YiUOerO-rKfH-E?usp=sharing
+
+
+
+DOCKER STUFF:
+1. sudo docker-compose build --no-cache
+2. sudo docker-compose up
+

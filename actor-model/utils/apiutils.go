@@ -11,16 +11,20 @@ import (
 func GetRoutes(address string) (mainRoutes *models.MainRouteMsg, err error) {
 	response, err := http.Get(address)
 	if err != nil {
-		log.Println("first err:", err)
+		log.Println("get by address:", err)
 		return nil, err
 	}
 
 	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		log.Println("reading body error:", err)
+		return nil, err
+	}
 	defer response.Body.Close()
 
 	err = json.Unmarshal(body, &mainRoutes)
 	if err != nil {
-		log.Println("third err:", err)
+		log.Println("unmarshalling body:", err)
 		return
 	}
 

@@ -2,7 +2,9 @@ package connectionactor
 
 import (
 	"bufio"
+	"fmt"
 	"net/http"
+	"os"
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 	"tweeter-sentiment-analyzer/actor-model/actorregistry"
 	"tweeter-sentiment-analyzer/actor-model/autoscaleractor"
@@ -68,7 +70,7 @@ func (connectionMaker *ConnectionActor) getPreparedData(ic <-chan string) chan s
 func (connectionMaker *ConnectionActor) makeReqPipeline(url string) chan string {
 	dataFlowChan := make(chan string, constants.GlobalChanSize)
 	go func() {
-		res, err := http.Get(constants.EndPointToTrigger + url)
+		res, err := http.Get(fmt.Sprintf("http://%s", os.Getenv("RTP_SERVER")) + url) //change here from constants.EndPointToTrigger + url
 		if err != nil {
 			return
 		}
