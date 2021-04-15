@@ -2,6 +2,7 @@ package client
 
 import (
 	"bufio"
+	"log"
 	"net"
 	"strings"
 	"tweeter-sentiment-analyzer/message-broker/commands"
@@ -11,7 +12,7 @@ type Client struct {
 	Outgoing   chan string
 	reader     *bufio.Reader
 	writer     *bufio.Writer
-	connection net.Conn
+	Connection net.Conn
 	name       string
 }
 
@@ -21,7 +22,7 @@ func NewClient(connection net.Conn, name string) *Client {
 
 	client := &Client{
 		Outgoing:   make(chan string),
-		connection: connection,
+		Connection: connection,
 		reader:     reader,
 		writer:     writer,
 		name:       name,
@@ -36,12 +37,10 @@ func (client *Client) Listen(ch chan string) {
 }
 
 func (client *Client) Read() {
-	defer close(client.Outgoing)
+	defer client.Connection.Close()
 	for {
-		line, err := client.reader.ReadString(10)
-		//log.Printf("client:%s -> line last: %v -> len bytest(%d) -> (%s)",client.connection.RemoteAddr(),[]byte(line)[len([]byte(line))-1],len([]byte(line)),line)
-		if err == nil {
-			if client.connection != nil {
+		if line, err := client.reader.ReadString(10); err == nil {
+			if client.Connection != nil {
 				//we use here a goroutine because our unbuffered chan block, because there is no a client which read messages from unbuffered chan
 				//If the channel is unbuffered, the sender blocks until the receiver has received the value -> from doc
 				go func() {
@@ -51,18 +50,66 @@ func (client *Client) Read() {
 			} else {
 				break
 			}
+		} else {
+			log.Println("Error occurred reading string in client from connection: ", err)
+			return
 		}
 	}
 }
 
-func (client *Client) write(ch <-chan string) {
-	for data := range client.Outgoing {
-		if strings.TrimSpace(data) == commands.TweetsTopic || strings.TrimSpace(data) == commands.UsersTopic {
-			for val := range ch {
-				if strings.Contains(val, strings.TrimSpace(data)) {
-					client.writer.WriteString(val)
-					client.writer.Flush()
-				}
+func (client *Client) write(ch chan string) {
+	myBoll := false
+	for {
+		select {
+		case topic := <-client.Outgoing:
+			log.Printf("client with connection address: %s want to sbcribe to topic: %s", client.Connection.RemoteAddr().String(), topic)
+			myBoll = false
+			switch withNoSpace := strings.TrimSpace(topic); withNoSpace {
+			case commands.TweetsTopic:
+				go func() {
+				TWEETSLABEL:
+					for msg := range ch {
+						if strings.Contains(msg, commands.TweetsTopic) {
+							n, err := client.writer.WriteString(msg)
+							if err != nil {
+								log.Println("write user: ", err, n)
+								return
+							}
+							err = client.writer.Flush()
+							if err != nil {
+								log.Println("flush user:", err)
+								return
+							}
+						}
+						if myBoll {
+							break TWEETSLABEL
+						}
+					}
+				}()
+			case commands.UsersTopic:
+				go func() {
+				USERLABEL:
+					for msg := range ch {
+						if strings.Contains(msg, commands.UsersTopic) {
+							n, err := client.writer.WriteString(msg)
+							if err != nil {
+								log.Println("write user: ", err, n)
+								return
+							}
+							err = client.writer.Flush()
+							if err != nil {
+								log.Println("flush user:", err)
+								return
+							}
+						}
+						if myBoll {
+							break USERLABEL
+						}
+					}
+				}()
+			case "STOP":
+				myBoll = true
+				continue
 			}
 		}
 	}
