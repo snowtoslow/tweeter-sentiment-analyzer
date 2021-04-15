@@ -16,3 +16,6 @@ DOCKER STUFF:
 1. sudo docker-compose build --no-cache
 2. sudo docker-compose up
 
+
+RUN TWEETS SERVER:
+sudo docker run -p 4000:4000 alexburlacu/rtp-server:faf18x

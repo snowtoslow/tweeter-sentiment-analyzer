@@ -2,6 +2,7 @@ package dynamicsupervisor
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"tweeter-sentiment-analyzer/actor-model/actorabstraction"
 	"tweeter-sentiment-analyzer/actor-model/actorregistry"
@@ -110,10 +111,23 @@ func (dynamicSupervisor *DynamicSupervisor) addActors(numberOfActors int, poolNa
 func (dynamicSupervisor *DynamicSupervisor) deleteActors(numberOfActors int, poolName string) {
 	dynamicSupervisor.sendToRouter(dynamicSupervisor.collectDataOfActorsToBeDroppedToSingleChan(-numberOfActors, poolName))
 	for i := 0; i < -numberOfActors; i++ {
-		*actorregistry.MyActorRegistry.FindActorByName(poolName).(*[]actorabstraction.IActor) =
-			append((*actorregistry.MyActorRegistry.FindActorByName(poolName).(*[]actorabstraction.IActor))[:i],
-				(*actorregistry.MyActorRegistry.FindActorByName(poolName).(*[]actorabstraction.IActor))[i+1:]...)
+		/**actorregistry.MyActorRegistry.FindActorByName(poolName).(*[]actorabstraction.IActor) =
+		append((*actorregistry.MyActorRegistry.FindActorByName(poolName).(*[]actorabstraction.IActor))[:i],
+			(*actorregistry.MyActorRegistry.FindActorByName(poolName).(*[]actorabstraction.IActor))[i+1:]...)*/
+		if err := removeElement(actorregistry.MyActorRegistry.FindActorByName(poolName).(*[]actorabstraction.IActor), i); err != nil {
+			log.Println("Error occurred in dynamic supervisor when removing elements:", err)
+			return
+		}
+
 	}
+}
+func removeElement(s *[]actorabstraction.IActor, i int) error {
+	if i >= len(*s) || i < 0 {
+		return fmt.Errorf("Index is out of range. Index is %d with slice length %d", i, len(*s))
+	}
+
+	*s = append((*s)[:i], (*s)[i+1:]...)
+	return nil
 }
 
 //log.Printf("idetity: %s--->%s",(*actorregistry.MyActorRegistry.FindActorByName("actorPool").(*[]actorabstraction.IActor))[i].(*workeractor.Actor).ActorProps.Identity,a.(string))
