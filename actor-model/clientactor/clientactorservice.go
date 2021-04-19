@@ -52,7 +52,7 @@ func (clientActor *ClientActor) ActorLoop() {
 
 func (clientActor *ClientActor) sendBrokerMessageToBroker(action interface{}, conn net.Conn) (err error) {
 	brokerMsg := new(models.BrokerMsg)
-	brokerMsg.Content = action
+	//brokerMsg.Content = action
 	brokerMsg.SetTopic(fmt.Sprintf("%T", action))
 	out, err := json.Marshal(brokerMsg)
 	if err != nil {

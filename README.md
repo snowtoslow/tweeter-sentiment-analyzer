@@ -11,11 +11,18 @@
    https://drive.google.com/drive/folders/1jlEr2jJOYAcp1Nka_7YiUOerO-rKfH-E?usp=sharing
 
 
+3.
+   DOCKER STUFF:
+      1. sudo docker-compose build --no-cache
+      2. sudo docker-compose up
 
-DOCKER STUFF:
-1. sudo docker-compose build --no-cache
-2. sudo docker-compose up
+
+   RUN TWEETS SERVER:
+         sudo docker run -p 4000:4000 alexburlacu/rtp-server:faf18x
 
 
-RUN TWEETS SERVER:
-sudo docker run -p 4000:4000 alexburlacu/rtp-server:faf18x
+   POSIBILITY TO TEST TOPICS:
+      //test : subscribe {"topics": ["usersTopic","tweetsTopic"]}
+      //test:  unsubscribe {"topics": ["usersTopic"]}
+      //again subscribe to users topic: subscribe {"topics": ["usersTopic"]}
+      //again: subscribe {"topics": ["tweetsTopic"]}

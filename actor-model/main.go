@@ -11,6 +11,9 @@ import (
 
 func main() {
 	log.Println("entry point!")
+	//dev purpose
+	os.Setenv("RTP_SERVER", "localhost:4000")
+	os.Setenv("BROKER_URL", "localhost:8088")
 
 	rtpImageUl := fmt.Sprintf("http://%s", os.Getenv("RTP_SERVER")) //change here from constants.EndPointToTrigger
 
