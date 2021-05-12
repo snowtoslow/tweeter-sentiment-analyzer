@@ -35,7 +35,8 @@ func (sinkActor *SinkActor) ActorLoop() {
 	ticker := time.NewTicker(constants.TickerInterval)
 	mongoClient, err := mongo.Connect(context.Background(), options.Client().ApplyURI(constants.ClusterDatabaseAddress))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Error occurred creating mongo client and connecting to mongo database err: ", err)
+		return
 	}
 
 	for {
@@ -50,14 +51,16 @@ func (sinkActor *SinkActor) ActorLoop() {
 			if len(sinkActor.sinkBuffer[constants.UserCollection])+len(sinkActor.sinkBuffer[constants.TweetsCollection]) == 128 {
 				// log.Println("Buffer len is full:", len(sinkActor.sinkBuffer[constants.UserCollection])+len(sinkActor.sinkBuffer[constants.TweetsCollection]))
 				if err = sinkActor.insertAndClear(mongoClient); err != nil {
-					log.Fatal(err)
+					log.Fatal("Error occurred inserting data into database and clear buffer on buffer-full: ", err)
+					return
 				}
 				ticker.Reset(constants.TickerInterval)
 			}
 		case <-ticker.C:
 			//log.Println("Buffer length after 200ms:", len(sinkActor.sinkBuffer[constants.UserCollection])+len(sinkActor.sinkBuffer[constants.TweetsCollection]))
 			if err = sinkActor.insertAndClear(mongoClient); err != nil {
-				log.Fatal(err)
+				log.Fatal("Error occurred inserting data into database and clear buffer on ticker event: ", err)
+				return
 			}
 		}
 	}
@@ -81,8 +84,6 @@ func (sinkActor *SinkActor) insertAndClear(mongoClient *mongo.Client) (errorOccu
 		}(k, v)
 	}
 
-	/*sinkActor.sinkBuffer[constants.UserCollection] = sinkActor.sinkBuffer[constants.UserCollection][:0]
-	sinkActor.sinkBuffer[constants.TweetsCollection] = sinkActor.sinkBuffer[constants.TweetsCollection][:0]*/
 	sinkActor.sinkBuffer = make(map[string][]interface{})
 	return
 }
