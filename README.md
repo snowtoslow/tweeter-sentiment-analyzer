@@ -22,18 +22,18 @@ sudo docker run -p 4000:4000 alexburlacu/rtp-server:faf18x
 
    TO TEST TOPICS USING DURABLE QUEUES:
    SUBSCRIBE:
-      {"topics": [{"value": "tweetsTopic","is_durable": true},{"value": "usersTopic","is_durable": false}],"command":"subscribe"}
+       {"topics": [{"value": "tweetsTopic","is_durable": true},{"value": "usersTopic","is_durable": false}],"command":"subscribe"}
        {"topics": [{"value": "usersTopic","is_durable": false}],"command":"subscribe"}
        {"topics": [{"value": "tweetsTopic","is_durable": true}],"command":"subscribe"}
-   
+
+   UNSUBSCRIBE:
+      {"topics": [{"value": "usersTopic"}],"command":"unsubscribe"} // from non durable
+      {"topics": [{"value": "tweetsTopic"}],"command":"unsubscribe"} //from durable topic -> nothing happens;
+
    STOP COMMAND:
       {"command":"stop"}
    
    UNiQUE ID MSG:
      ***** value => value is the string unique id which can be taken from logs; *******
-                        {"unique_id_for_durable": %v} 
+                        {"unique_id_for_durable": "1169ec18-1ef9-4bdc-886f-ae6bbf100040"} 
 
-   
-   UNSUBSCRIBE:
-      {"topics": [{"value": "usersTopic"}],"command":"unsubscribe"} // from non durable
-      {"topics": [{"value": "tweetsTopic"}],"command":"unsubscribe"} //from durable topic -> nothing happens; 
