@@ -10,30 +10,36 @@
 
    https://drive.google.com/drive/folders/1jlEr2jJOYAcp1Nka_7YiUOerO-rKfH-E?usp=sharing
 
+3. Link to video with output result of third laboratory work:
+   https://drive.google.com/file/d/1y9OhHsrlTlvvpokxwF5qBLqTliDXncOy/view?usp=sharing
 
-3.
-sudo docker run -p 4000:4000 alexburlacu/rtp-server:faf18x
-   DOCKER STUFF:
-      1. sudo docker-compose build --no-cache
-      2. sudo docker-compose up
-      3. Connects to Broker using telnet -> telnet 127.0.0.1 8088;
+        
+    DOCKER STUFF:
+        1. sudo docker-compose build --no-cache
+        2. sudo docker-compose up
+        3. Connects to Broker using telnet -> telnet 127.0.0.1 8088;
 
 
+    TO TEST TOPICS USING DURABLE QUEUES:
+        
 
-   TO TEST TOPICS USING DURABLE QUEUES:
-   SUBSCRIBE:
-       {"topics": [{"value": "tweetsTopic","is_durable": true},{"value": "usersTopic","is_durable": false}],"command":"subscribe"}
-       {"topics": [{"value": "usersTopic","is_durable": false}],"command":"subscribe"}
-       {"topics": [{"value": "tweetsTopic","is_durable": true}],"command":"subscribe"}
+    SUBSCRIBE:
 
-   UNSUBSCRIBE:
-      {"topics": [{"value": "usersTopic"}],"command":"unsubscribe"} // from non durable
-      {"topics": [{"value": "tweetsTopic"}],"command":"unsubscribe"} //from durable topic -> nothing happens;
+        {"topics": [{"value": "tweetsTopic","is_durable": true},{"value": "usersTopic","is_durable": false}],"command":"subscribe"}
+        
+        {"topics": [{"value": "usersTopic","is_durable": false}],"command":"subscribe"}
+        
+        {"topics": [{"value": "tweetsTopic","is_durable": true}],"command":"subscribe"}
 
-   STOP COMMAND:
-      {"command":"stop"}
+    UNSUBSCRIBE:
+        {"topics": [{"value": "usersTopic"}],"command":"unsubscribe"} // from non durable
+        
+        {"topics": [{"value": "tweetsTopic"}],"command":"unsubscribe"} //from durable topic -> nothing happens;
+
+    STOP COMMAND:
+         {"command":"stop"}
    
-   UNiQUE ID MSG:
-     ***** value => value is the string unique id which can be taken from logs; *******
-                        {"unique_id_for_durable": "1169ec18-1ef9-4bdc-886f-ae6bbf100040"} 
+    UNiQUE ID MSG:
+        ***** value => value is the string unique id which can be taken from logs; *******
+        {"unique_id_for_durable": "value"} 
 
