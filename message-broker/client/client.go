@@ -6,42 +6,58 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"os"
 	"strings"
 	"tweeter-sentiment-analyzer/message-broker/typedmsg"
 	"tweeter-sentiment-analyzer/message-broker/utils"
 )
 
 type Client struct {
-	CommandChan                            chan typedmsg.Message
-	reader                                 *bufio.Reader
-	Connection                             net.Conn
-	Name                                   string
-	SubscribedTopics                       *[]typedmsg.Topic
-	UniqueId                               string
-	ChanForRemainingMessagesOfDurableTopic chan string
-	DurableQueueChan                       chan *typedmsg.DurableQueue
+	//CommandChan is a chan for receiving commands like subscribe, unsubscribe and stop;
+	CommandChan chan typedmsg.Message
+
+	//reader is a created for reading from connection
+	reader *bufio.Reader
+
+	//Connection broker connection which contains information about local, remote address and other stuff about tcp conn;
+	Connection net.Conn
+
+	//Name is the name of connected client -> client_%nr_of_connected_actor;
+	Name string
+
+	//SubscribedTopics topics to which is subscribed a specific client;
+	SubscribedTopics *[]typedmsg.Topic
+
+	//UniqueId for client durable topics;
+	UniqueId string
+
+	//ClientMessageChanRelatedToATopic chan where messages of subscribed topic is flying;
+	ClientMessageChanRelatedToATopic chan string
+
+	//DurableQueueChan is a chan where is is send durable queue, the list of previously subscribed topics;
+	DurableQueueChan chan *typedmsg.DurableQueue
 }
 
+//NewClient function which creates a new client which connects to broker;
 func NewClient(connection net.Conn, name string) *Client {
 	reader := bufio.NewReader(connection)
 	client := &Client{
-		CommandChan:                            make(chan typedmsg.Message),
-		Connection:                             connection,
-		reader:                                 reader,
-		Name:                                   name,
-		ChanForRemainingMessagesOfDurableTopic: make(chan string),
-		DurableQueueChan:                       make(chan *typedmsg.DurableQueue, 1),
+		CommandChan:                      make(chan typedmsg.Message),
+		Connection:                       connection,
+		reader:                           reader,
+		Name:                             name,
+		ClientMessageChanRelatedToATopic: make(chan string),
+		DurableQueueChan:                 make(chan *typedmsg.DurableQueue, 1),
 	}
 	return client
 }
 
+//Listen method which contains parallel read and write operations;
 func (client *Client) Listen(ch chan string, stopChan chan typedmsg.StopMessage, notifyDurable chan typedmsg.UniqueIdAndAddress) {
-	go client.Read(notifyDurable)
+	go client.read(notifyDurable)
 	go client.write(ch, stopChan)
 }
 
-func (client *Client) Read(notifDurable chan typedmsg.UniqueIdAndAddress) {
+func (client *Client) read(notifyAboutDurable chan typedmsg.UniqueIdAndAddress) {
 	for {
 		if line, err := client.reader.ReadString('\n'); err == nil {
 			if client.Connection != nil {
@@ -54,17 +70,14 @@ func (client *Client) Read(notifDurable chan typedmsg.UniqueIdAndAddress) {
 				}
 				messageStruct.Address = typedmsg.ClientAddress(client.Connection.RemoteAddr().String())
 
+				//here is the check if message struct contains uniqueID of a previously subscribed topic
+				//
+				// and if it exists we notify broker to firstly write messages durable messages;
 				if len(messageStruct.UniqueIDForDurable) != 0 {
-					info := typedmsg.UniqueIdAndAddress{
-						UniqueId:      messageStruct.UniqueIDForDurable,
-						ClientAddress: messageStruct.Address,
-					}
-
-					go func(info typedmsg.UniqueIdAndAddress) {
-						notifDurable <- info
-					}(info)
+					notifyBrokerAboutDurableMessages(notifyAboutDurable, messageStruct)
 				}
 
+				//default case to receive a command of subscribe or unsubscribe;
 				go func(messageStruct typedmsg.Message) {
 					client.CommandChan <- messageStruct
 				}(messageStruct)
@@ -73,22 +86,33 @@ func (client *Client) Read(notifDurable chan typedmsg.UniqueIdAndAddress) {
 				break
 			}
 		} else {
-			/*log.Println("Error occurred reading string in client from connection: ", err)*/
 			return
 		}
 	}
 }
 
-func (client *Client) write(ch chan string, stopChan chan typedmsg.StopMessage) {
+//notifyBrokerAboutDurableMessages function to notify broker that this client was already connected and have durable topics;
+func notifyBrokerAboutDurableMessages(notifyAboutDurable chan typedmsg.UniqueIdAndAddress, messageStruct typedmsg.Message) {
+	info := typedmsg.UniqueIdAndAddress{
+		UniqueId:      messageStruct.UniqueIDForDurable,
+		ClientAddress: messageStruct.Address,
+	}
+
+	go func(info typedmsg.UniqueIdAndAddress) {
+		notifyAboutDurable <- info
+	}(info)
+}
+
+func (client *Client) write(actorChanWithMessages chan string, stopChan chan typedmsg.StopMessage) {
 	for {
 		select {
 		case messageStruct := <-client.CommandChan:
-			if anonFunc, ok := client.createMapsWithFunction(ch, stopChan)[messageStruct.Command]; ok {
+			if anonFunc, ok := client.createMapsWithFunction(actorChanWithMessages, stopChan)[messageStruct.Command]; ok {
 				go anonFunc(messageStruct.Topics)
 			}
 		case result := <-client.DurableQueueChan:
 			topics := utils.ConvertToTopic(result.DurableTopics)
-			client.SetSubscribedTopics(topics)
+			client.setSubscribedTopics(topics)
 			writer := bufio.NewWriter(client.Connection)
 			for _, val := range result.Queue {
 				writer.WriteString(val)
@@ -98,13 +122,13 @@ func (client *Client) write(ch chan string, stopChan chan typedmsg.StopMessage) 
 	}
 }
 
-func (client *Client) createMapsWithFunction(ch chan string, stopChan chan typedmsg.StopMessage) map[typedmsg.Command]func(topics []typedmsg.Topic) {
+func (client *Client) createMapsWithFunction(actorChanWithMessages chan string, stopChan chan typedmsg.StopMessage) map[typedmsg.Command]func(topics []typedmsg.Topic) {
 	mapsWithFunction := map[typedmsg.Command]func(topics []typedmsg.Topic){
 		"subscribe": func(topics []typedmsg.Topic) {
 			log.Println("subscribe")
-			client.SetSubscribedTopics(topics)
+			client.setSubscribedTopics(topics)
 			go func() {
-				if err := client.writeToClient(ch); err != nil {
+				if err := client.writeToClient(actorChanWithMessages); err != nil {
 					log.Println("Error occurred during writing to client => ", err)
 					return
 				}
@@ -126,13 +150,14 @@ func (client *Client) createMapsWithFunction(ch chan string, stopChan chan typed
 	return mapsWithFunction
 }
 
+//createStopMessage method to create a stop message which will be send to broker chan with stop command;
 func (client *Client) createStopMessage() (stopMsg typedmsg.StopMessage) {
 	durableTopics, err := client.extractOnlyDurableTopics()
 	if err == nil {
-		stopMsg.UniqueClientId = generateUuidgen()
+		stopMsg.UniqueClientId = utils.GenerateUuid()
 		stopMsg.OnlyDurableTopics = durableTopics
 		stopMsg.ClientAddress = client.Connection.RemoteAddr().String()
-		stopMsg.MyMagicChan = client.ChanForRemainingMessagesOfDurableTopic
+		stopMsg.MyMagicChan = client.ClientMessageChanRelatedToATopic
 		stopMsg.Name = client.Name
 	} else {
 		log.Println("Extract only durable topics error: ", err)
@@ -141,6 +166,7 @@ func (client *Client) createStopMessage() (stopMsg typedmsg.StopMessage) {
 	return
 }
 
+//extractOnlyDurableTopics method which extracts only durable topics from topics to which a client is subscribed;
 func (client *Client) extractOnlyDurableTopics() (onlyDurableTopics typedmsg.DurableTopicsValue, err error) {
 	for _, v := range *client.SubscribedTopics {
 		if v.IsDurable {
@@ -155,11 +181,12 @@ func (client *Client) extractOnlyDurableTopics() (onlyDurableTopics typedmsg.Dur
 	return
 }
 
-func (client *Client) SetSubscribedTopics(topics []typedmsg.Topic) (newSubscribedTopics *[]typedmsg.Topic) {
+//setSubscribedTopics method which set the subscribed topics of a client;
+func (client *Client) setSubscribedTopics(topics []typedmsg.Topic) (newSubscribedTopics *[]typedmsg.Topic) {
 	if client.SubscribedTopics == nil {
 		client.SubscribedTopics = &topics
 	} else {
-		missingElements := missing(*client.SubscribedTopics, topics)
+		missingElements := utils.Missing(*client.SubscribedTopics, topics)
 		if missingElements != nil {
 			for _, v := range missingElements {
 				*(client.SubscribedTopics) = append(*(client.SubscribedTopics), v)
@@ -172,10 +199,10 @@ func (client *Client) SetSubscribedTopics(topics []typedmsg.Topic) (newSubscribe
 
 func (client *Client) writeToClient(ch chan string) error {
 	clientWriter := bufio.NewWriter(client.Connection)
-	client.sendRemainingMessagesOfADurableTopic(ch)
+	client.sendMessagesOfSubscribedTopicsToClientChan(ch)
 	for {
 		select {
-		case msg := <-client.ChanForRemainingMessagesOfDurableTopic:
+		case msg := <-client.ClientMessageChanRelatedToATopic:
 			if client.Connection != nil {
 				if _, err := clientWriter.WriteString(msg); err != nil {
 					log.Printf("Error writing because of %s ", err)
@@ -190,56 +217,27 @@ func (client *Client) writeToClient(ch chan string) error {
 	}
 }
 
-func (client *Client) sendRemainingMessagesOfADurableTopic(ch chan string) {
+//sendMessagesOfSubscribedTopicsToClientChan send messages of subscribed topics to client chan;
+func (client *Client) sendMessagesOfSubscribedTopicsToClientChan(ch chan string) {
 	go func() {
 		for msg := range ch {
 			for _, v := range *client.SubscribedTopics {
 				if strings.Contains(msg, v.Value) {
-					client.ChanForRemainingMessagesOfDurableTopic <- msg
+					client.ClientMessageChanRelatedToATopic <- msg
 				}
 			}
 		}
-		close(client.ChanForRemainingMessagesOfDurableTopic)
+		close(client.ClientMessageChanRelatedToATopic)
 	}()
 }
 
 func (client *Client) deleteTopic(topicsToUnsubscribe []typedmsg.Topic) {
+	log.Println("DELETE!")
 	for _, topicToUnsubscribe := range topicsToUnsubscribe {
-		for _, value := range *client.SubscribedTopics {
-			if value == topicToUnsubscribe {
-				log.Println("function to delete topic here")
+		for key, value := range *client.SubscribedTopics {
+			if value.Value == topicToUnsubscribe.Value && !value.IsDurable {
+				*client.SubscribedTopics = append((*client.SubscribedTopics)[:key], (*client.SubscribedTopics)[key+1:]...)
 			}
 		}
 	}
-}
-
-func generateUuidgen() string {
-	f, err := os.Open("/dev/urandom")
-	if err != nil {
-		log.Fatal("ERROR OPENING FILE " + "/dev/urandom")
-	}
-	b := make([]byte, 16)
-	if _, err = f.Read(b); err != nil {
-		log.Fatal("ERROR READING FROM FILE: " + "/dev/urandom")
-	}
-	f.Close()
-	uuid := fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
-	return uuid
-}
-
-func missing(a, b []typedmsg.Topic) (diffs []typedmsg.Topic) {
-	// create map with length of the 'a' slice
-	ma := make(map[string]struct{}, len(a))
-
-	// Convert first slice to map with empty struct (0 bytes)
-	for _, ka := range a {
-		ma[ka.Value] = struct{}{}
-	}
-	// find missing values in a
-	for _, kb := range b {
-		if _, ok := ma[kb.Value]; !ok {
-			diffs = append(diffs, kb)
-		}
-	}
-	return diffs
 }

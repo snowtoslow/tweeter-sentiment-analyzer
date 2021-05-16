@@ -2,12 +2,11 @@ package main
 
 import (
 	"log"
-	"net"
 	"tweeter-sentiment-analyzer/message-broker/broker"
 )
 
 func main() {
-	var conn net.Conn
-	srv := broker.NewBroker(conn)
-	log.Fatal(srv.RunBroker(":8088"))
+	//var conn net.Conn
+	brokerServer := broker.NewBroker()
+	log.Fatal(brokerServer.RunBroker(":8088"))
 }

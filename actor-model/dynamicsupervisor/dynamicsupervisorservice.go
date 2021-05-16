@@ -75,9 +75,11 @@ func (dynamicSupervisor *DynamicSupervisor) ActorLoop() {
 func (dynamicSupervisor *DynamicSupervisor) deleteActorsFromBothPools(numberOfActors int) {
 	poolsName := []string{constants.AggregationActorPool, constants.SentimentActorPool}
 	for _, v := range poolsName {
-		go func(v string) {
+		/*go func(v string) {
 			dynamicSupervisor.deleteActors(numberOfActors, v)
-		}(v)
+		}(v)*/
+		dynamicSupervisor.deleteActors(numberOfActors, v)
+
 	}
 }
 

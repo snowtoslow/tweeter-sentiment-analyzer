@@ -12,32 +12,28 @@
 
 
 3.
+sudo docker run -p 4000:4000 alexburlacu/rtp-server:faf18x
    DOCKER STUFF:
       1. sudo docker-compose build --no-cache
       2. sudo docker-compose up
+      3. Connects to Broker using telnet -> telnet 127.0.0.1 8088;
 
-
-   RUN TWEETS SERVER:
-         sudo docker run -p 4000:4000 alexburlacu/rtp-server:faf18x
-         telnet 127.0.0.1 8088
-
-
-   POSSIBILITY TO TEST TOPICS BEFORE ADDING DURABLE QUEUES:
-      //test : subscribe {"topics": ["usersTopic","tweetsTopic"]}
-      //test:  unsubscribe {"topics": ["usersTopic"]}
-      //again subscribe to users topic: subscribe {"topics": ["usersTopic"]}
-      //again: subscribe {"topics": ["tweetsTopic"]}
 
 
    TO TEST TOPICS USING DURABLE QUEUES:
-   {"topics": [{"value": "tweetsTopic","is_durable": true},{"value": "usersTopic","is_durable": false}],"command":"subscribe"}
+   SUBSCRIBE:
+      {"topics": [{"value": "tweetsTopic","is_durable": true},{"value": "usersTopic","is_durable": false}],"command":"subscribe"}
+       {"topics": [{"value": "usersTopic","is_durable": false}],"command":"subscribe"}
+       {"topics": [{"value": "tweetsTopic","is_durable": true}],"command":"subscribe"}
+   
+   STOP COMMAND:
+      {"command":"stop"}
+   
+   UNiQUE ID MSG:
+     ***** value => value is the string unique id which can be taken from logs; *******
+                        {"unique_id_for_durable": %v} 
 
-   {"topics": [{"value": "tweetsTopic","is_durable": true}],"command":"subscribe"}
-
-   {"command":"stop"}
-
-   {"unique_id_for_durable":"2df37c44-3326-077f-960d-92c6222bb5b7"}
-
-   {"topics": [{"value": "usersTopic","is_durable": false}],"command":"subscribe"}
-
-   {"topics": [{"value": "tweetsTopic"}],"command":"unsubscribe"}
+   
+   UNSUBSCRIBE:
+      {"topics": [{"value": "usersTopic"}],"command":"unsubscribe"} // from non durable
+      {"topics": [{"value": "tweetsTopic"}],"command":"unsubscribe"} //from durable topic -> nothing happens; 

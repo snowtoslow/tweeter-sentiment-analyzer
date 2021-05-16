@@ -63,9 +63,8 @@ func (clientActor *ClientActor) sendBrokerMessageToBroker(action interface{}, co
 	if _, err = conn.Write(out); err != nil {
 		log.Println("Error during writing to server: ", err)
 		return
-	} else {
-		log.Println("msg send")
 	}
+
 	return
 }
 

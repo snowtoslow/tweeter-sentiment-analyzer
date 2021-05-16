@@ -12,7 +12,6 @@ import (
 )
 
 type Broker struct {
-	/*connection          net.Conn*/
 	clients             map[string]*client.Client
 	counter             int
 	ActorConnection     net.Conn
@@ -22,9 +21,8 @@ type Broker struct {
 	notifyDurable       chan typedmsg.UniqueIdAndAddress
 }
 
-func NewBroker(connection net.Conn) *Broker {
+func NewBroker() *Broker {
 	broker := &Broker{
-		/*connection:          connection,*/
 		clients:             make(map[string]*client.Client),
 		actorDataChan:       make(chan string),
 		durableClientQueues: make(map[string]*typedmsg.DurableQueue),
@@ -60,6 +58,7 @@ func (broker *Broker) RunBroker(port string) error {
 	}
 }
 
+//  handleClients function to handle multiple clients which can connect concurrently to message broker;
 func (broker *Broker) handleClients(conn net.Conn) (err error) {
 	broker.counter++
 	if broker.counter == 1 {
@@ -67,12 +66,13 @@ func (broker *Broker) handleClients(conn net.Conn) (err error) {
 		go broker.readFromActorConnection()
 	} else if broker.counter > 1 {
 		log.Printf("Client with name: %s connects to broker with remote address of connection: %s", fmt.Sprintf("client_%d", broker.counter), conn.RemoteAddr().String())
+
 		broker.clients[conn.RemoteAddr().String()] = client.NewClient(conn, fmt.Sprintf("client_%d", broker.counter))
 		for _, v := range broker.clients {
 			v.Listen(broker.actorDataChan, broker.stopSignalChan, broker.notifyDurable)
 		}
 
-		err = broker.durableMessages()
+		err = broker.createDurableMessages()
 		if err != nil {
 			return err
 		}
@@ -81,7 +81,8 @@ func (broker *Broker) handleClients(conn net.Conn) (err error) {
 	return nil
 }
 
-func (broker *Broker) durableMessages() error {
+//createDurableMessages create struct of durableTopics after receiving a stop signal message;
+func (broker *Broker) createDurableMessages() error {
 	select {
 	case stopCommand := <-broker.stopSignalChan:
 		log.Println("STOP:", stopCommand)
@@ -95,7 +96,7 @@ func (broker *Broker) durableMessages() error {
 			queue := typedmsg.NewDurableQueue(stopCommand.UniqueClientId, stopCommand.OnlyDurableTopics)
 			for _, topic := range stopCommand.OnlyDurableTopics {
 				go func(topic string) {
-					for msg := range v.ChanForRemainingMessagesOfDurableTopic {
+					for msg := range v.ClientMessageChanRelatedToATopic {
 						if strings.Contains(msg, topic) {
 							queue.Enqueue(msg)
 						}
@@ -122,6 +123,7 @@ func (broker *Broker) durableMessages() error {
 	return nil
 }
 
+//getClientByAddress get client from connected clients by client remote address;
 func (broker *Broker) getClientByAddress(address string) (*client.Client, error) {
 	if foundClient, ok := broker.clients[address]; ok {
 		return foundClient, nil
@@ -129,12 +131,14 @@ func (broker *Broker) getClientByAddress(address string) (*client.Client, error)
 	return nil, fmt.Errorf("client not exists")
 }
 
+//readFromActorConnection method which create a separate chan to send messages which is received from actor client;
 func (broker *Broker) readFromActorConnection() {
 	reader := bufio.NewReader(broker.ActorConnection)
 	for {
 		line, err := reader.ReadString(10)
 		if err != nil {
-			log.Println("Error reading from actor:", err)
+			log.Println("No more messages to subscribe:", err)
+			//return
 		}
 		broker.actorDataChan <- line
 	}

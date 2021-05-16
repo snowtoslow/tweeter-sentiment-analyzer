@@ -100,7 +100,7 @@ func GenerateUuidgen() string {
 /*func GenerateUuidgen() (uuid string) {
 
 	b := make([]byte, 16)
-	_, err := rand.Read(b)
+	_, err := rand.read(b)
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return
